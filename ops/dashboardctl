@@ -1,0 +1,415 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PLATFORM_DIR="${SALEOR_PLATFORM_DIR:-/home/saleor/saleor-platform}"
+ENV_FILE="$PLATFORM_DIR/.env"
+COMPOSE_FILE="$PLATFORM_DIR/docker-compose.yml"
+STATE_DIR="$ROOT_DIR/.ops-state"
+STATE_FILE="$STATE_DIR/deployment.env"
+CANARY_NAME="${DASHBOARD_CANARY_NAME:-saleor-dashboard-canary}"
+CANARY_PORT="${DASHBOARD_CANARY_PORT:-9001}"
+IMAGE_REPOSITORY="${DASHBOARD_IMAGE_REPOSITORY:-local/saleor-dashboard-custom}"
+PUBLIC_DASHBOARD_URL="${PUBLIC_DASHBOARD_URL:-https://dashboard.ruslibrary.com}"
+
+log() {
+  printf '[dashboardctl] %s\n' "$*"
+}
+
+die() {
+  log "ERROR: $*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || die "Required command is missing: $1"
+}
+
+require_files() {
+  [[ -f "$ENV_FILE" ]] || die "Missing platform env file: $ENV_FILE"
+  [[ -f "$COMPOSE_FILE" ]] || die "Missing compose file: $COMPOSE_FILE"
+}
+
+read_env_value() {
+  local key="$1"
+  awk -F= -v key="$key" '$1 == key {sub(/^[^=]*=/, ""); print; exit}' "$ENV_FILE"
+}
+
+write_env_value() {
+  local key="$1"
+  local value="$2"
+  local temporary
+
+  temporary="$(mktemp "${ENV_FILE}.XXXXXX")"
+  awk -v key="$key" -v value="$value" '
+    BEGIN { found = 0 }
+    index($0, key "=") == 1 {
+      print key "=" value
+      found = 1
+      next
+    }
+    { print }
+    END {
+      if (!found) {
+        print key "=" value
+      }
+    }
+  ' "$ENV_FILE" > "$temporary"
+  chmod --reference="$ENV_FILE" "$temporary"
+  mv "$temporary" "$ENV_FILE"
+}
+
+git_sha() {
+  git -C "$ROOT_DIR" rev-parse HEAD
+}
+
+short_git_sha() {
+  git -C "$ROOT_DIR" rev-parse --short=12 HEAD
+}
+
+project_version() {
+  node -p "require('$ROOT_DIR/package.json').version"
+}
+
+head_image() {
+  printf '%s:%s-custom-%s\n' \
+    "$IMAGE_REPOSITORY" \
+    "$(project_version)" \
+    "$(short_git_sha)"
+}
+
+require_clean_tree() {
+  git -C "$ROOT_DIR" diff --quiet || die "Working tree has uncommitted changes"
+  git -C "$ROOT_DIR" diff --cached --quiet || die "Index has uncommitted changes"
+
+  local untracked
+  untracked="$(git -C "$ROOT_DIR" ls-files --others --exclude-standard)"
+  [[ -z "$untracked" ]] || die "Working tree has untracked files: $untracked"
+}
+
+dashboard_asset_url() {
+  local base_url="$1"
+  local asset_path="$2"
+
+  if [[ "$asset_path" =~ ^https?:// ]]; then
+    printf '%s\n' "$asset_path"
+  else
+    printf '%s%s\n' "${base_url%/}" "$asset_path"
+  fi
+}
+
+smoke_dashboard() {
+  local base_url="$1"
+  local expected_api_url="$2"
+  local html_file
+  local asset_path
+  local asset_url
+
+  html_file="$(mktemp)"
+  trap 'rm -f "$html_file"' RETURN
+
+  curl -fsS --max-time 20 "${base_url%/}/" -o "$html_file"
+  grep -Fq "API_URL: \"$expected_api_url\"" "$html_file" \
+    || die "Dashboard at $base_url does not contain expected API_URL"
+
+  asset_path="$(
+    sed -n 's/.*src="\([^"]*\.js\)".*/\1/p' "$html_file" \
+      | head -n 1
+  )"
+  [[ -n "$asset_path" ]] || die "Unable to find Dashboard JavaScript asset at $base_url"
+
+  asset_url="$(dashboard_asset_url "$base_url" "$asset_path")"
+  curl -fsS --max-time 30 "$asset_url" -o /dev/null
+  rm -f "$html_file"
+  trap - RETURN
+}
+
+wait_for_dashboard() {
+  local base_url="$1"
+  local expected_api_url="$2"
+  local attempts="${3:-30}"
+
+  for ((attempt = 1; attempt <= attempts; attempt++)); do
+    if smoke_dashboard "$base_url" "$expected_api_url" 2>/dev/null; then
+      return 0
+    fi
+    sleep 2
+  done
+  return 1
+}
+
+build_image() {
+  require_clean_tree
+
+  local image
+  local full_sha
+  local version
+
+  image="$(head_image)"
+  full_sha="$(git_sha)"
+  version="$(project_version)-custom-$(short_git_sha)"
+
+  if docker image inspect "$image" >/dev/null 2>&1; then
+    log "Image already exists: $image"
+    printf '%s\n' "$image"
+    return 0
+  fi
+
+  log "Building $image"
+  docker build \
+    --build-arg "COMMIT_ID=$full_sha" \
+    --build-arg "PROJECT_VERSION=$version" \
+    --tag "$image" \
+    "$ROOT_DIR"
+
+  docker image inspect "$image" >/dev/null
+  log "Built $image"
+  printf '%s\n' "$image"
+}
+
+start_canary() {
+  require_files
+
+  local image="${1:-$(head_image)}"
+  local api_url
+
+  docker image inspect "$image" >/dev/null 2>&1 \
+    || die "Image is not available locally: $image"
+
+  api_url="$(read_env_value DASHBOARD_API_URL)"
+  [[ -n "$api_url" ]] || die "DASHBOARD_API_URL is missing in $ENV_FILE"
+
+  if docker container inspect "$CANARY_NAME" >/dev/null 2>&1; then
+    log "Removing previous canary container"
+    docker rm --force "$CANARY_NAME" >/dev/null
+  fi
+
+  log "Starting canary $image on 127.0.0.1:$CANARY_PORT"
+  docker run --detach \
+    --name "$CANARY_NAME" \
+    --label "saleor.role=dashboard-canary" \
+    --publish "127.0.0.1:${CANARY_PORT}:80" \
+    --env "API_URL=$api_url" \
+    --env "APP_MOUNT_URI=/dashboard/" \
+    --memory "256m" \
+    "$image" >/dev/null
+
+  if ! wait_for_dashboard "http://127.0.0.1:$CANARY_PORT" "$api_url"; then
+    docker logs --tail 100 "$CANARY_NAME" >&2 || true
+    die "Canary smoke test failed"
+  fi
+
+  log "Canary passed: http://127.0.0.1:$CANARY_PORT"
+}
+
+stop_canary() {
+  if docker container inspect "$CANARY_NAME" >/dev/null 2>&1; then
+    docker rm --force "$CANARY_NAME" >/dev/null
+    log "Canary removed"
+  else
+    log "Canary is not running"
+  fi
+}
+
+deploy_image() {
+  local target_image="$1"
+  local rollback_image="$2"
+  local api_url
+
+  api_url="$(read_env_value DASHBOARD_API_URL)"
+  [[ -n "$api_url" ]] || die "DASHBOARD_API_URL is missing in $ENV_FILE"
+
+  write_env_value DASHBOARD_IMAGE "$target_image"
+
+  if ! docker compose -f "$COMPOSE_FILE" up \
+    --detach \
+    --no-deps \
+    --force-recreate \
+    dashboard; then
+    log "Compose failed; restoring $rollback_image"
+    write_env_value DASHBOARD_IMAGE "$rollback_image"
+    docker compose -f "$COMPOSE_FILE" up \
+      --detach \
+      --no-deps \
+      --force-recreate \
+      dashboard
+    return 1
+  fi
+
+  if ! wait_for_dashboard "http://127.0.0.1:9000" "$api_url" \
+    || ! wait_for_dashboard "$PUBLIC_DASHBOARD_URL" "$api_url"; then
+    log "Smoke test failed; automatically restoring $rollback_image"
+    write_env_value DASHBOARD_IMAGE "$rollback_image"
+    docker compose -f "$COMPOSE_FILE" up \
+      --detach \
+      --no-deps \
+      --force-recreate \
+      dashboard
+    wait_for_dashboard "http://127.0.0.1:9000" "$api_url" \
+      || die "Automatic rollback did not restore the local Dashboard"
+    return 1
+  fi
+}
+
+promote_image() {
+  require_files
+
+  local image="${1:-$(head_image)}"
+  local canary_image
+  local current_image
+
+  docker image inspect "$image" >/dev/null 2>&1 \
+    || die "Image is not available locally: $image"
+  docker container inspect "$CANARY_NAME" >/dev/null 2>&1 \
+    || die "Canary is not running; run '$0 canary $image' first"
+
+  canary_image="$(docker inspect "$CANARY_NAME" --format '{{.Config.Image}}')"
+  [[ "$canary_image" == "$image" ]] \
+    || die "Canary uses $canary_image, not $image"
+
+  current_image="$(read_env_value DASHBOARD_IMAGE)"
+  if [[ -z "$current_image" ]]; then
+    current_image="$(
+      docker inspect saleor-platform-dashboard-1 --format '{{.Config.Image}}'
+    )"
+  fi
+
+  if [[ "$current_image" == "$image" ]]; then
+    log "Production already uses $image"
+    return 0
+  fi
+
+  log "Promoting $image; previous image is $current_image"
+  deploy_image "$image" "$current_image"
+
+  mkdir -p "$STATE_DIR"
+  {
+    printf 'CURRENT_IMAGE=%s\n' "$image"
+    printf 'PREVIOUS_IMAGE=%s\n' "$current_image"
+    printf 'CURRENT_GIT_SHA=%s\n' "$(git_sha)"
+    printf 'DEPLOYED_AT=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  } > "$STATE_FILE"
+
+  stop_canary
+  log "Production passed: $image"
+}
+
+read_state_value() {
+  local key="$1"
+  awk -F= -v key="$key" '$1 == key {sub(/^[^=]*=/, ""); print; exit}' "$STATE_FILE"
+}
+
+rollback_image() {
+  require_files
+  [[ -f "$STATE_FILE" ]] || die "No deployment history found at $STATE_FILE"
+
+  local current_image
+  local previous_image
+
+  current_image="$(read_env_value DASHBOARD_IMAGE)"
+  previous_image="$(read_state_value PREVIOUS_IMAGE)"
+  [[ -n "$previous_image" ]] || die "PREVIOUS_IMAGE is missing in deployment state"
+
+  docker image inspect "$previous_image" >/dev/null 2>&1 \
+    || die "Rollback image is not available locally: $previous_image"
+
+  log "Rolling back from $current_image to $previous_image"
+  deploy_image "$previous_image" "$current_image"
+
+  {
+    printf 'CURRENT_IMAGE=%s\n' "$previous_image"
+    printf 'PREVIOUS_IMAGE=%s\n' "$current_image"
+    printf 'CURRENT_GIT_SHA=rollback\n'
+    printf 'DEPLOYED_AT=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  } > "$STATE_FILE"
+
+  log "Rollback passed: $previous_image"
+}
+
+show_status() {
+  require_files
+
+  local production_image
+  local canary_status="absent"
+  local canary_image="-"
+
+  production_image="$(
+    docker inspect saleor-platform-dashboard-1 --format '{{.Config.Image}}' 2>/dev/null \
+      || printf 'not-running'
+  )"
+
+  if docker container inspect "$CANARY_NAME" >/dev/null 2>&1; then
+    canary_status="$(docker inspect "$CANARY_NAME" --format '{{.State.Status}}')"
+    canary_image="$(docker inspect "$CANARY_NAME" --format '{{.Config.Image}}')"
+  fi
+
+  printf 'git_branch=%s\n' "$(git -C "$ROOT_DIR" branch --show-current)"
+  printf 'git_sha=%s\n' "$(git_sha)"
+  printf 'head_image=%s\n' "$(head_image)"
+  printf 'configured_image=%s\n' "$(read_env_value DASHBOARD_IMAGE)"
+  printf 'production_image=%s\n' "$production_image"
+  printf 'canary_status=%s\n' "$canary_status"
+  printf 'canary_image=%s\n' "$canary_image"
+  if [[ -f "$STATE_FILE" ]]; then
+    printf 'previous_image=%s\n' "$(read_state_value PREVIOUS_IMAGE)"
+  fi
+}
+
+show_help() {
+  cat <<'EOF'
+Usage:
+  ops/dashboardctl build
+  ops/dashboardctl canary [image]
+  ops/dashboardctl canary-stop
+  ops/dashboardctl promote [image]
+  ops/dashboardctl rollback
+  ops/dashboardctl status
+  ops/dashboardctl image
+
+The working tree must be committed before build. Production promotion is
+allowed only for the exact image currently running in the local canary.
+EOF
+}
+
+main() {
+  require_command awk
+  require_command curl
+  require_command docker
+  require_command git
+  require_command node
+
+  cd "$ROOT_DIR"
+
+  case "${1:-help}" in
+    build)
+      build_image
+      ;;
+    canary)
+      start_canary "${2:-$(head_image)}"
+      ;;
+    canary-stop)
+      stop_canary
+      ;;
+    promote)
+      promote_image "${2:-$(head_image)}"
+      ;;
+    rollback)
+      rollback_image
+      ;;
+    status)
+      show_status
+      ;;
+    image)
+      head_image
+      ;;
+    help | --help | -h)
+      show_help
+      ;;
+    *)
+      show_help >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"
