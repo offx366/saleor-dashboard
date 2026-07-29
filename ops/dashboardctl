@@ -106,22 +106,31 @@ smoke_dashboard() {
   local asset_url
 
   html_file="$(mktemp)"
-  trap 'rm -f "$html_file"' RETURN
 
-  curl -fsS --max-time 20 "${base_url%/}/" -o "$html_file"
-  grep -Fq "API_URL: \"$expected_api_url\"" "$html_file" \
-    || die "Dashboard at $base_url does not contain expected API_URL"
+  if ! curl -fsS --max-time 20 "${base_url%/}/" -o "$html_file"; then
+    rm -f "$html_file"
+    return 1
+  fi
+  if ! grep -Fq "API_URL: \"$expected_api_url\"" "$html_file"; then
+    rm -f "$html_file"
+    return 1
+  fi
 
   asset_path="$(
     sed -n 's/.*src="\([^"]*\.js\)".*/\1/p' "$html_file" \
       | head -n 1
   )"
-  [[ -n "$asset_path" ]] || die "Unable to find Dashboard JavaScript asset at $base_url"
+  if [[ -z "$asset_path" ]]; then
+    rm -f "$html_file"
+    return 1
+  fi
 
   asset_url="$(dashboard_asset_url "$base_url" "$asset_path")"
-  curl -fsS --max-time 30 "$asset_url" -o /dev/null
+  if ! curl -fsS --max-time 30 "$asset_url" -o /dev/null; then
+    rm -f "$html_file"
+    return 1
+  fi
   rm -f "$html_file"
-  trap - RETURN
 }
 
 wait_for_dashboard() {
