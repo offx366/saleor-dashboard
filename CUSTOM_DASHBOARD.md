@@ -15,7 +15,7 @@ configured as the `upstream` remote; no public fork is required.
 - `rollback` restores the last known production image without touching Saleor
   Core, PostgreSQL, orders, or customer data.
 
-The canary listens only on `127.0.0.1:9001`. It uses the production GraphQL API
+The canary listens only on `127.0.0.1:19001`. It uses the production GraphQL API
 but receives no public traffic.
 
 ## Normal feature workflow
@@ -53,10 +53,10 @@ ops/dashboardctl rollback
 For a local browser, tunnel the canary port:
 
 ```bash
-ssh -L 9001:127.0.0.1:9001 <server>
+ssh -L 19001:127.0.0.1:19001 <server>
 ```
 
-Then open `http://localhost:9001/`.
+Then open `http://localhost:19001/`.
 
 ## Updating from Saleor
 
