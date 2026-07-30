@@ -107,6 +107,18 @@ export const OrderListDatagrid = ({
   const orderIds = useMemo(() => orders?.map(order => order.id) ?? [], [orders]);
   const trackingEnabled = visibleColumns.some(column => column.id === "tracking");
   const tracking = useOrderTrackingSummaries(orderIds, trackingEnabled);
+  const handleColumnMove = useCallback(
+    (startIndex: number, endIndex: number): void => {
+      const trackingIndex = visibleColumns.findIndex(column => column.id === "tracking");
+
+      if (startIndex === trackingIndex || endIndex === trackingIndex) {
+        return;
+      }
+
+      handlers.onMove(startIndex, endIndex);
+    },
+    [handlers, visibleColumns],
+  );
   const getCellContent = useGetCellContent({
     columns: visibleColumns,
     orders,
@@ -136,7 +148,7 @@ export const OrderListDatagrid = ({
           rows={getOrdersRowsLength(orders, disabled)}
           selectionActions={() => null}
           onColumnResize={handlers.onResize}
-          onColumnMoved={handlers.onMove}
+          onColumnMoved={handleColumnMove}
           renderColumnPicker={() => (
             <ColumnPicker
               staticColumns={staticColumns}

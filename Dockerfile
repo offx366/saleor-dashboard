@@ -1,4 +1,4 @@
-FROM node:24-alpine AS builder
+FROM node:24-alpine AS source
 RUN apk --no-cache add bash
 RUN corepack enable && corepack prepare pnpm@10 --activate
 WORKDIR /app
@@ -34,6 +34,8 @@ ENV STATIC_URL="${STATIC_URL:-/dashboard/}"
 ENV SKIP_SOURCEMAPS="${SKIP_SOURCEMAPS:-true}"
 ENV LOCALE_CODE="${LOCALE_CODE:-EN}"
 RUN pnpm run generate:main
+
+FROM source AS builder
 RUN pnpm exec cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build
 
 FROM nginx:stable-alpine AS runner

@@ -53,8 +53,6 @@ const NET_COLUMN_ID = "net";
 const TOTAL_COLUMN_ID = "total";
 const CHANNEL_COLUMN_ID = "channel";
 const TRACKING_COLUMN_ID = "tracking";
-const CUSTOMER_COLUMN_ID = "customer";
-const FULFILLMENT_STATUS_COLUMN_ID = "status";
 
 export const oldDefaultOrderListColumns = [
   "number",
@@ -71,20 +69,22 @@ export const defaultOrderListColumnsWithTracking = [
   "number",
   "date",
   "customer",
-  "tracking",
   "payment",
   "status",
   "net",
   "total",
   "channel",
+  "tracking",
 ];
 
 export const shouldMigrateOrderListColumns = (columns: string[] | undefined): boolean =>
   Boolean(columns?.length && !columns.includes(TRACKING_COLUMN_ID));
 
 export const getOrderListColumns = (columns: string[] | undefined): string[] | undefined =>
-  shouldMigrateOrderListColumns(columns)
-    ? orderOrderListColumns([...(columns ?? []), TRACKING_COLUMN_ID])
+  columns
+    ? orderOrderListColumns(
+        shouldMigrateOrderListColumns(columns) ? [...columns, TRACKING_COLUMN_ID] : columns,
+      )
     : columns;
 
 /**
@@ -92,28 +92,11 @@ export const getOrderListColumns = (columns: string[] | undefined): string[] | u
  * "total" (or before "channel" when total is hidden).
  */
 export function orderOrderListColumns(columns: string[]): string[] {
-  let orderedColumns = columns;
-
-  if (columns.includes(TRACKING_COLUMN_ID)) {
-    const withoutTracking = columns.filter(columnId => columnId !== TRACKING_COLUMN_ID);
-    const customerIndex = withoutTracking.indexOf(CUSTOMER_COLUMN_ID);
-    const statusIndex = withoutTracking.indexOf(FULFILLMENT_STATUS_COLUMN_ID);
-    const trackingIndex =
-      customerIndex >= 0
-        ? customerIndex + 1
-        : statusIndex >= 0
-          ? statusIndex + 1
-          : withoutTracking.length;
-
-    orderedColumns = [
-      ...withoutTracking.slice(0, trackingIndex),
-      TRACKING_COLUMN_ID,
-      ...withoutTracking.slice(trackingIndex),
-    ];
-  }
+  const hasTracking = columns.includes(TRACKING_COLUMN_ID);
+  let orderedColumns = columns.filter(columnId => columnId !== TRACKING_COLUMN_ID);
 
   if (!orderedColumns.includes(NET_COLUMN_ID)) {
-    return orderedColumns;
+    return hasTracking ? [...orderedColumns, TRACKING_COLUMN_ID] : orderedColumns;
   }
 
   const withoutNet = orderedColumns.filter(columnId => columnId !== NET_COLUMN_ID);
@@ -123,9 +106,11 @@ export function orderOrderListColumns(columns: string[]): string[] {
       ? withoutNet.indexOf(CHANNEL_COLUMN_ID)
       : withoutNet.length;
 
-  return [
+  orderedColumns = [
     ...withoutNet.slice(0, insertBeforeIndex),
     NET_COLUMN_ID,
     ...withoutNet.slice(insertBeforeIndex),
   ];
+
+  return hasTracking ? [...orderedColumns, TRACKING_COLUMN_ID] : orderedColumns;
 }

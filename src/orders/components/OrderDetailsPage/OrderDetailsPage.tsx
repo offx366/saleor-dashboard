@@ -49,6 +49,7 @@ import OrderInvoiceList from "../OrderInvoiceList";
 import { LinePriceWaterfallModal } from "../OrderLinePriceBreakdown/components/LinePriceWaterfallModal";
 import { useOrderLinePriceWaterfall } from "../OrderLinePriceBreakdown/hooks/useOrderLinePriceWaterfall";
 import { OrderSummary } from "../OrderSummary/OrderSummary";
+import { OrderTrackingTimeline } from "../OrderTrackingTimeline/OrderTrackingTimeline";
 import { OrderTransactionsSection } from "../OrderTransactionsSection/OrderTransactionsSection";
 import { messages } from "./messages";
 import Title from "./Title";
@@ -154,7 +155,6 @@ const OrderDetailsPage = (props: OrderDetailsPageProps) => {
   const canFulfill = order?.status !== OrderStatus.CANCELED;
   const notAllowedToFulfillUnpaid =
     shop?.fulfillmentAutoApprove && !shop?.fulfillmentAllowUnpaid && !order?.isPaid;
-  const unfulfilled = (order?.lines || []).filter(line => line.quantityToFulfill > 0);
   const handleSubmit = async (data: MetadataIdSchema) => {
     if (!onSubmit) {
       return [];
@@ -290,7 +290,9 @@ const OrderDetailsPage = (props: OrderDetailsPageProps) => {
 
         {order && !isOrderUnconfirmed && (
           <>
-            {(unfulfilled.length > 0 || (order.fulfillments?.length ?? 0) > 0) && <CardSpacer />}
+            <CardSpacer />
+            <OrderTrackingTimeline orderId={order.id} />
+            <CardSpacer />
             <OrderSummary
               order={order}
               onMarkAsPaid={onMarkAsPaid}

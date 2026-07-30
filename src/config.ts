@@ -145,10 +145,10 @@ export const defaultListSettings: AppListViewSettings = {
       "customer",
       "payment",
       "status",
-      "tracking",
       "net",
       "total",
       "channel",
+      "tracking",
     ],
   },
   [ListViews.PAGES_LIST]: {

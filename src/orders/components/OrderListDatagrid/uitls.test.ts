@@ -130,7 +130,7 @@ describe("OrderListDatagrid utils", () => {
       expect(result).toEqual(columns);
     });
 
-    it("places tracking immediately after customer so it is visible without scrolling", () => {
+    it("always places tracking at the far right", () => {
       // Arrange
       const columns = ["tracking", "number", "date", "customer", "status", "net", "total"];
 
@@ -138,7 +138,7 @@ describe("OrderListDatagrid utils", () => {
       const result = orderOrderListColumns(columns);
 
       // Assert
-      expect(result).toEqual(["number", "date", "customer", "tracking", "status", "net", "total"]);
+      expect(result).toEqual(["number", "date", "customer", "status", "net", "total", "tracking"]);
     });
   });
 
@@ -162,18 +162,23 @@ describe("OrderListDatagrid utils", () => {
       expect(getOrderListColumns(customColumns)).toEqual([
         "number",
         "customer",
-        "tracking",
         "total",
+        "tracking",
       ]);
     });
 
-    it("does not change columns after tracking has been added", () => {
+    it("moves tracking to the far right after it has been added", () => {
       // Arrange
       const columnsWithTracking = ["number", "customer", "tracking", "total"];
 
       // Act & Assert
       expect(shouldMigrateOrderListColumns(columnsWithTracking)).toBe(false);
-      expect(getOrderListColumns(columnsWithTracking)).toBe(columnsWithTracking);
+      expect(getOrderListColumns(columnsWithTracking)).toEqual([
+        "number",
+        "customer",
+        "total",
+        "tracking",
+      ]);
     });
   });
 });

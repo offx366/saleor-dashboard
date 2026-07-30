@@ -2,8 +2,26 @@ import { createFetch } from "@dashboard/legacy-sdk";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ORDER_TRACKING_ENDPOINT = "https://api.ruslibrary.com/tracking/api/order-tracking-summary";
+
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const authenticatedFetch = createFetch({ refreshOnUnauthorized: false });
+
+export interface TrackingProvider {
+  name?: string;
+  alias?: string;
+  country?: string;
+}
+
+export interface TrackingTimelineEvent {
+  time?: string;
+  timeUtc?: string;
+  description?: string;
+  location?: string;
+  city?: string | null;
+  country?: string | null;
+  stage?: string | null;
+  subStatus?: string | null;
+}
 
 export interface TrackingSummary {
   trackingNumber: string;
@@ -12,6 +30,9 @@ export interface TrackingSummary {
   lastEventTime?: string;
   lastLocation?: string;
   checkedAt: string;
+  provider?: TrackingProvider | null;
+  events?: TrackingTimelineEvent[];
+  providerTrackingStopped?: boolean;
 }
 
 export interface OrderTrackingSummary {
@@ -20,7 +41,7 @@ export interface OrderTrackingSummary {
   tracking: TrackingSummary[];
 }
 
-interface OrderTrackingResponse {
+export interface OrderTrackingResponse {
   orders: OrderTrackingSummary[];
   providerError: boolean;
 }
@@ -31,6 +52,33 @@ interface UseOrderTrackingSummariesResult {
   hasError: boolean;
   providerError: boolean;
 }
+
+interface FetchOrderTrackingSummariesOptions {
+  orderIds: string[];
+  includeDetails?: boolean;
+  signal?: AbortSignal;
+}
+
+export const fetchOrderTrackingSummaries = async ({
+  orderIds,
+  includeDetails = false,
+  signal,
+}: FetchOrderTrackingSummariesOptions): Promise<OrderTrackingResponse> => {
+  const response = await authenticatedFetch(ORDER_TRACKING_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ orderIds, includeDetails }),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Order tracking request failed with ${response.status}`);
+  }
+
+  return response.json();
+};
 
 export const useOrderTrackingSummaries = (
   orderIds: string[],
@@ -56,20 +104,10 @@ export const useOrderTrackingSummaries = (
       setHasError(false);
 
       try {
-        const response = await authenticatedFetch(ORDER_TRACKING_ENDPOINT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ orderIds: stableOrderIds }),
+        const result = await fetchOrderTrackingSummaries({
+          orderIds: stableOrderIds,
           signal,
         });
-
-        if (!response.ok) {
-          throw new Error(`Order tracking request failed with ${response.status}`);
-        }
-
-        const result: OrderTrackingResponse = await response.json();
 
         if (!signal?.aborted) {
           setData(result);

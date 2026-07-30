@@ -182,6 +182,9 @@
     "context": "error message used when manifest URL is incorrect (before any further validation)",
     "string": "Invalid manifest URL"
   },
+  "+w0GCY": {
+    "string": "This order does not have a tracking number yet"
+  },
   "+wpvnk": {
     "context": "dialog title",
     "string": "Delete Collection"
@@ -1199,6 +1202,9 @@
     "context": "notification when the same SKU would be generated twice in one batch",
     "string": "Your selection would create duplicate SKUs in this batch: {skus}. Adjust the prefix or selected values."
   },
+  "3xiwF5": {
+    "string": "Could not load shipment tracking"
+  },
   "3xv4ez": {
     "string": "Go to users/staff members"
   },
@@ -1614,6 +1620,9 @@
     "context": "voucher is active from date",
     "string": "Starts"
   },
+  "5wLT96": {
+    "string": "Show full journey ({count} events)"
+  },
   "5wktck": {
     "context": "Description for no variant in channel error",
     "string": "Variants exist but none are available in this channel. Add variant channel listings."
@@ -1923,6 +1932,9 @@
   },
   "7NFfmz": {
     "string": "Products"
+  },
+  "7OUJ+4": {
+    "string": "The carrier has not published any events yet"
   },
   "7QPLu0": {
     "context": "empty state message",
@@ -3275,6 +3287,9 @@
     "context": "dialog header, title",
     "string": "Invoice Generation"
   },
+  "DillEz": {
+    "string": "Open in 17TRACK"
+  },
   "DnghuS": {
     "context": "channel create",
     "string": "New Channel"
@@ -3773,6 +3788,9 @@
     "context": "value input label",
     "string": "Discount value"
   },
+  "GBPMMf": {
+    "string": "Last checked"
+  },
   "GCPzKf": {
     "context": "ProductTypeDeleteWarningDialog single assigned items button label",
     "string": "View products"
@@ -3921,6 +3939,9 @@
   "GiJm1v": {
     "context": "dialog content",
     "string": "{counter,plural,one{Are you sure you want to unassign this category?} other{Are you sure you want to unassign {displayQuantity} categories?}}"
+  },
+  "Giy64i": {
+    "string": "{hours, plural, one {# hour} other {# hours}}"
   },
   "GkJBnh": {
     "context": "Accessible label for matrix column help icon",
@@ -5378,6 +5399,9 @@
   "NQgbYA": {
     "string": "Account Settings"
   },
+  "NR1IYH": {
+    "string": "Delivered — automatic provider checks have stopped"
+  },
   "NSOHa/": {
     "context": "gift card export dialog intro",
     "string": "Choose which gift cards to export and the file format. Only active, unused gift cards are included."
@@ -5870,6 +5894,9 @@
   },
   "PfxzLv": {
     "string": "Checking…"
+  },
+  "Ph58Wf": {
+    "string": "Waiting for carrier scans"
   },
   "PhXtJy": {
     "context": "factor label for line-level voucher discount",
@@ -7829,6 +7856,9 @@
   "Z/jtCO": {
     "string": "Avatar deleted"
   },
+  "Z1RDyy": {
+    "string": "Carrier not identified"
+  },
   "Z3T6zR": {
     "context": "card title",
     "string": "Return & Replace"
@@ -8994,6 +9024,9 @@
   "eCA3n1": {
     "context": "Health check label for isAvailableForPurchase field",
     "string": "Can add to cart"
+  },
+  "eF+nf8": {
+    "string": "Latest update"
   },
   "eIGXwJ": {
     "context": "Alert text",
@@ -10359,6 +10392,9 @@
     "context": "delete model",
     "string": "Are you sure you want to delete {title}?"
   },
+  "knQ0du": {
+    "string": "Carrier events"
+  },
   "kny5j9": {
     "context": "section title",
     "string": "Password Login"
@@ -10541,6 +10577,9 @@
     "context": "money",
     "string": "from {money}"
   },
+  "lWY4Sr": {
+    "string": "Show recent events"
+  },
   "lXq4EE": {
     "context": "checkbox",
     "string": "Refund shipment: {currency} {amount}"
@@ -10600,6 +10639,9 @@
   "lm9NSK": {
     "context": "password reset, button",
     "string": "Send an email with reset link"
+  },
+  "lmjwGx": {
+    "string": "The carrier is temporarily unavailable. Showing the last saved tracking data."
   },
   "lnteBJ": {
     "context": "country rates list label for the default rate",
@@ -10792,6 +10834,9 @@
   "mn9eY+": {
     "context": "model type detail cogs menu, opens the delete-confirmation dialog",
     "string": "Delete model type"
+  },
+  "mqrPth": {
+    "string": "Shipment journey"
   },
   "mqwLmD": {
     "string": "Menu updated"
@@ -11383,6 +11428,9 @@
     "context": "gift card currency redemption info callout",
     "string": "This {currency} gift card can only be redeemed in channels that use {currency}. The delivery channel above only controls which email notification is sent."
   },
+  "pc2Z1L": {
+    "string": "Delivery time"
+  },
   "pc36KX": {
     "context": "PageTypeDeleteWarningDialog multiple consent label",
     "string": "Yes, I want to delete those model types and assigned models"
@@ -11738,6 +11786,9 @@
     "context": "order detail page, top-bar metadata button tooltip",
     "string": "Edit order metadata"
   },
+  "qw+hky": {
+    "string": "{days, plural, one {# day} other {# days}} {hours, plural, =0 {} one {# hour} other {# hours}}"
+  },
   "qwp4zK": {
     "context": "Health check subtitle when product can be purchased",
     "string": "Product is visible in store and available for purchase"
@@ -11925,6 +11976,9 @@
   "rs815i": {
     "context": "text field label",
     "string": "Group name"
+  },
+  "ruRGzt": {
+    "string": "Carrier update"
   },
   "rvk9ls": {
     "context": "attribute can be used only in variants",
@@ -12134,6 +12188,9 @@
   "snUby7": {
     "context": "header",
     "string": "Unnamed Webhook Details"
+  },
+  "snfXfZ": {
+    "string": "Live carrier status, delivery time and the complete tracking chain"
   },
   "spjKeI": {
     "string": "Fulfillment approved"
@@ -13237,6 +13294,9 @@
   "xRkj2h": {
     "string": "Are you sure you want to delete {categoryName}?"
   },
+  "xRwqzV": {
+    "string": "No carrier update yet"
+  },
   "xTyg+p": {
     "string": "No options to select"
   },
@@ -13490,6 +13550,9 @@
   "yn7Stx": {
     "context": "date group header",
     "string": "Unknown"
+  },
+  "ynONSA": {
+    "string": "Time in transit"
   },
   "ynhBeQ": {
     "context": "created gift card code label",

@@ -17,17 +17,17 @@ interface GetOrderTrackingCellStateOptions {
   intl: IntlShape;
 }
 
-const normalizeStatus = (status: string): string =>
+export const normalizeTrackingStatus = (status: string): string =>
   status
     .trim()
     .toLowerCase()
     .replace(/[^a-z]/g, "");
 
 const isDelivered = (status: TrackingSummary): boolean =>
-  normalizeStatus(status.status).startsWith("delivered");
+  normalizeTrackingStatus(status.status).startsWith("delivered");
 
 const getStatusPriority = (status: TrackingSummary): number => {
-  const normalized = normalizeStatus(status.status);
+  const normalized = normalizeTrackingStatus(status.status);
 
   if (
     normalized.startsWith("deliveryfailure") ||
@@ -64,8 +64,8 @@ const getStatusPriority = (status: TrackingSummary): number => {
   return 6;
 };
 
-const getStatusTone = (status: string): DotStatus => {
-  const normalized = normalizeStatus(status);
+export const getTrackingStatusTone = (status: string): DotStatus => {
+  const normalized = normalizeTrackingStatus(status);
 
   if (normalized.startsWith("delivered")) {
     return "success";
@@ -82,8 +82,8 @@ const getStatusTone = (status: string): DotStatus => {
   return "warning";
 };
 
-const getStatusLabel = (status: string, intl: IntlShape): string => {
-  const normalized = normalizeStatus(status);
+export const getTrackingStatusLabel = (status: string, intl: IntlShape): string => {
+  const normalized = normalizeTrackingStatus(status);
 
   if (normalized.startsWith("delivered")) {
     return intl.formatMessage(trackingMessages.delivered);
@@ -171,7 +171,7 @@ export const getOrderTrackingCellState = ({
   const primary = sorted[0];
   const deliveredCount = summary.tracking.filter(isDelivered).length;
   const allDelivered = deliveredCount === summary.tracking.length;
-  const statusLabel = getStatusLabel(primary.status, intl);
+  const statusLabel = getTrackingStatusLabel(primary.status, intl);
 
   if (allDelivered) {
     return {
@@ -195,6 +195,6 @@ export const getOrderTrackingCellState = ({
 
   return {
     label: detail ? `${statusLabel} · ${detail}` : statusLabel,
-    tone: getStatusTone(primary.status),
+    tone: getTrackingStatusTone(primary.status),
   };
 };
