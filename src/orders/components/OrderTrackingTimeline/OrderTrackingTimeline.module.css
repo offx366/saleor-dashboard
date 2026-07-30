@@ -96,9 +96,10 @@
 
 .event {
   display: grid;
-  grid-template-columns: 1rem minmax(9rem, 12rem) minmax(0, 1fr);
+  grid-template-columns: 1rem 12rem minmax(0, 1fr);
+  align-items: start;
   gap: var(--mu-spacing-3);
-  min-height: 4rem;
+  padding-bottom: var(--mu-spacing-5);
 }
 
 .eventMarker {
@@ -132,6 +133,7 @@
 
 .eventTime {
   min-width: 0;
+  white-space: nowrap;
 }
 
 .eventDetails {
@@ -139,7 +141,6 @@
   flex-direction: column;
   gap: var(--mu-spacing-1);
   min-width: 0;
-  padding-bottom: var(--mu-spacing-4);
   overflow-wrap: anywhere;
 }
 
