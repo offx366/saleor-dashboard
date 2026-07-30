@@ -58,6 +58,31 @@ ssh -L 19001:127.0.0.1:19001 <server>
 
 Then open `http://localhost:19001/`.
 
+## Customer conversations integration
+
+The order details sidebar loads public incoming and outgoing messages for the
+order email from the GlobalHealingWeb Chatwoot inbox. The browser never receives
+the Chatwoot API token. It calls the existing GlobalHealingWeb bot endpoint,
+which validates the active Saleor staff token and requires `MANAGE_ORDERS`
+before querying Chatwoot.
+
+Dashboard component:
+
+```text
+src/orders/components/OrderCustomerConversations/
+```
+
+Server-side proxy:
+
+```text
+/home/saleor/saleor-platform/chatwood/globalhealingweb_bot/server.mjs
+```
+
+Brevo is currently the SMTP transport used by Chatwoot. It is not configured as
+an inbound email inbox, so the card shows conversations recorded by Chatwoot.
+If an email inbox is added later, include its inbox ID in
+`DASHBOARD_CHATWOOT_INBOX_IDS`.
+
 ## Updating from Saleor
 
 Fetch the official tags and create an upgrade branch:

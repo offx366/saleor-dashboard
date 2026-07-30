@@ -38,6 +38,7 @@ import { useIntl } from "react-intl";
 
 import { getMutationErrors, maybe } from "../../../misc";
 import OrderCustomer from "../OrderCustomer";
+import { OrderCustomerConversations } from "../OrderCustomerConversations/OrderCustomerConversations";
 import OrderCustomerNote from "../OrderCustomerNote";
 import { OrderDetailsItemsSection } from "../OrderDetailsItemsSection/OrderDetailsItemsSection";
 import OrderDraftDetails from "../OrderDraftDetails/OrderDraftDetails";
@@ -368,6 +369,9 @@ const OrderDetailsPage = (props: OrderDetailsPageProps) => {
           onShippingAddressEdit={onShippingAddressEdit}
           onProfileView={onProfileView}
         />
+        <CardSpacer />
+        <Divider />
+        <OrderCustomerConversations email={order?.userEmail || order?.user?.email} />
         <CardSpacer />
         <Divider />
         {!isOrderUnconfirmed && (

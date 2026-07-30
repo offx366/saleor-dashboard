@@ -463,6 +463,9 @@
     "context": "swatch attribute color picker label",
     "string": "Picker"
   },
+  "0FVOg6": {
+    "string": "No customer email is available"
+  },
   "0FexL7": {
     "context": "min price in channel",
     "string": "Min. value"
@@ -3592,6 +3595,9 @@
   "FZTrzW": {
     "string": "Manual refund"
   },
+  "FazwRl": {
+    "string": "Try again"
+  },
   "Fbr4Vp": {
     "context": "dialog header",
     "string": "Permissions"
@@ -4566,6 +4572,9 @@
     "context": "activate app",
     "string": "Are you sure you want to activate {name}? Activating will start gathering events."
   },
+  "JfG49w": {
+    "string": "Open"
+  },
   "JfKvrV": {
     "context": "select variant media",
     "string": "Select a specific variant media from product media"
@@ -4791,6 +4800,9 @@
   "KszPFx": {
     "context": "dialog header",
     "string": "Void Payment"
+  },
+  "Kt1byr": {
+    "string": "No customer messages in this conversation"
   },
   "KupNHw": {
     "context": "product field",
@@ -5401,6 +5413,9 @@
     "context": "label for button",
     "string": "Create class"
   },
+  "NlPrGG": {
+    "string": "Conversation #{number}"
+  },
   "NlSJMM": {
     "context": "channels section name",
     "string": "Channels"
@@ -5773,6 +5788,9 @@
   "PTW56s": {
     "context": "alert",
     "string": "Channel limit reached"
+  },
+  "PTlcy9": {
+    "string": "Customer conversations"
   },
   "PUVq0k": {
     "context": "warning dialog title when SKU and stock are not set",
@@ -6911,6 +6929,9 @@
     "context": "channel name",
     "string": "Channel name"
   },
+  "UzTci+": {
+    "string": "No Chatwoot conversations for this email"
+  },
   "V+fkAO": {
     "context": "number of products in category",
     "string": "Products"
@@ -7115,6 +7136,9 @@
   "W5hb5H": {
     "context": "warehouse input",
     "string": "Warehouse"
+  },
+  "W6nSYE": {
+    "string": "Resolved"
   },
   "W6nwjo": {
     "string": "Draft"
@@ -8939,6 +8963,9 @@
   "eKEL/g": {
     "string": "Pending"
   },
+  "eLCAEP": {
+    "string": "Attachment"
+  },
   "eLJQSh": {
     "context": "column title gift card",
     "string": "Gift Card"
@@ -9682,6 +9709,9 @@
   "iFM716": {
     "context": "grant refund, refund card subtitle",
     "string": "How much money do you want to return to the customer for the order?"
+  },
+  "iH+vKS": {
+    "string": "Snoozed"
   },
   "iIPThY": {
     "context": "onboarding title",
@@ -11719,6 +11749,9 @@
     "context": "invalid date in expirydate field content",
     "string": "Gift Card with past expiration date cannot be created"
   },
+  "rELDbB": {
+    "string": "Refresh"
+  },
   "rFPJmR": {
     "context": "inline hint when return page is opened with lineId",
     "string": "Opened from the line matrix for {productName}. Quantities are prefilled for this line — adjust before submitting."
@@ -12062,6 +12095,9 @@
   },
   "spjKeI": {
     "string": "Fulfillment approved"
+  },
+  "sqNhFZ": {
+    "string": "Could not load customer conversations"
   },
   "srtbbS": {
     "context": "gift card currency mismatch with delivery channel callout",
