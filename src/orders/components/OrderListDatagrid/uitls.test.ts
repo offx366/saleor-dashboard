@@ -4,9 +4,13 @@ import { type RelayToFlat } from "@dashboard/types";
 
 import {
   canBeSorted,
+  defaultOrderListColumnsWithTracking,
   getColumnNameAndId,
+  getOrderListColumns,
   getOrdersRowsLength,
+  oldDefaultOrderListColumns,
   orderOrderListColumns,
+  shouldMigrateOrderListColumns,
 } from "./utils";
 
 describe("OrderListDatagrid utils", () => {
@@ -124,6 +128,38 @@ describe("OrderListDatagrid utils", () => {
 
       // Assert
       expect(result).toEqual(columns);
+    });
+
+    it("places tracking immediately after fulfillment status", () => {
+      // Arrange
+      const columns = ["tracking", "number", "date", "status", "net", "total"];
+
+      // Act
+      const result = orderOrderListColumns(columns);
+
+      // Assert
+      expect(result).toEqual(["number", "date", "status", "tracking", "net", "total"]);
+    });
+  });
+
+  describe("tracking column migration", () => {
+    it("adds tracking to the old default order columns", () => {
+      // Arrange & Act
+      const shouldMigrate = shouldMigrateOrderListColumns(oldDefaultOrderListColumns);
+      const columns = getOrderListColumns(oldDefaultOrderListColumns);
+
+      // Assert
+      expect(shouldMigrate).toBe(true);
+      expect(columns).toEqual(defaultOrderListColumnsWithTracking);
+    });
+
+    it("does not change a customized column list", () => {
+      // Arrange
+      const customColumns = ["number", "customer", "total"];
+
+      // Act & Assert
+      expect(shouldMigrateOrderListColumns(customColumns)).toBe(false);
+      expect(getOrderListColumns(customColumns)).toBe(customColumns);
     });
   });
 });

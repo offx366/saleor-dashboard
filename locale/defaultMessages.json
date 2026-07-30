@@ -1489,6 +1489,9 @@
     "context": "waiting for export to end, header",
     "string": "Exporting CSV"
   },
+  "5Rkpro": {
+    "string": "No tracking"
+  },
   "5RmuD+": {
     "string": "Manage and update your warehouse information"
   },
@@ -1563,6 +1566,9 @@
   "5i/InH": {
     "context": "open new window button",
     "string": "Open this order in GraphiQL"
+  },
+  "5jeq8P": {
+    "string": "Unknown"
   },
   "5kODlC": {
     "string": "{usedGiftCards, plural, one {Gift card} other {Gift cards} } {giftCardCodesList}"
@@ -1950,6 +1956,9 @@
     "context": "model",
     "string": "will be visible from {date}"
   },
+  "7Y9/BQ": {
+    "string": "Ready for pickup"
+  },
   "7YSzeP": {
     "context": "dialog description",
     "string": "Are you sure you want to cancel fulfillment?"
@@ -2208,6 +2217,9 @@
   "8uLHBY": {
     "context": "unassign attribute from object",
     "string": "Are you sure you want to unassign {attributeName} from {itemTypeName}?"
+  },
+  "8uZ38U": {
+    "string": "Delivery issue"
   },
   "8ugJiV": {
     "string": "Reward value type"
@@ -3072,6 +3084,9 @@
     "context": "playground shortcut",
     "string": "Playground"
   },
+  "Cr7DpP": {
+    "string": "{delivered}/{total} delivered"
+  },
   "CrY98m": {
     "context": "button, marks order as paid (legacy payments)",
     "string": "Mark order as paid"
@@ -3183,6 +3198,9 @@
   "DM/Ha1": {
     "context": "add postal code range, button",
     "string": "Add"
+  },
+  "DMqnF4": {
+    "string": "Delivered"
   },
   "DNTxWr": {
     "context": "permission groups section name",
@@ -4020,6 +4038,9 @@
   },
   "HAlOn1": {
     "string": "Name"
+  },
+  "HCeRP3": {
+    "string": "Tracking expired"
   },
   "HFo3Qe": {
     "context": "successfully created gift card alert title",
@@ -5267,6 +5288,9 @@
     "context": "error message",
     "string": "Number not set for an invoice"
   },
+  "N4uOoP": {
+    "string": "Tracking unavailable"
+  },
   "N5UuEK": {
     "context": "header",
     "string": "Items ready to ship"
@@ -5843,6 +5867,9 @@
   "PeMebc": {
     "context": "search section name",
     "string": "Search"
+  },
+  "PfxzLv": {
+    "string": "Checking…"
   },
   "PhXtJy": {
     "context": "factor label for line-level voucher discount",
@@ -6625,6 +6652,9 @@
     "context": "Short tooltip for OrderSettings.automaticallyFulfillNonShippableGiftCard",
     "string": "Auto-fulfills non-shippable gift card lines when the order is created."
   },
+  "TThIOM": {
+    "string": "Not found"
+  },
   "TV940D": {
     "string": "{count, plural, one {# voucher code deleted} other {# voucher codes deleted}}"
   },
@@ -6832,6 +6862,9 @@
   "UcrXYE": {
     "context": "Description for scheduled status when publication date is in the future",
     "string": "Publication scheduled"
+  },
+  "UdVzmc": {
+    "string": "Out for delivery"
   },
   "Uh3NX/": {
     "context": "remove failed installation dialog content",
@@ -7187,6 +7220,9 @@
   },
   "WK62MN": {
     "string": "Fulfillment"
+  },
+  "WKITZr": {
+    "string": "Tracking status"
   },
   "WMGoqz": {
     "context": "used by filter label",
@@ -11084,6 +11120,9 @@
   "oL7VUz": {
     "string": "Order Metadata"
   },
+  "oLBci1": {
+    "string": "In transit"
+  },
   "oLMXDv": {
     "context": "order status",
     "string": "Ready to fulfill"
@@ -13368,6 +13407,9 @@
   "yMjwop": {
     "context": "granted refund amount in line expanded panel",
     "string": "Refund total {amount}"
+  },
+  "yNSJTr": {
+    "string": "Label created"
   },
   "yOaNWB": {
     "context": "delete shipping method",

@@ -4,6 +4,7 @@ import {
   moneyCell,
   pillCell,
   readonlyTextCell,
+  statusCell,
   textCell,
 } from "@dashboard/components/Datagrid/customCells/cells";
 import { type GetCellContentOpts } from "@dashboard/components/Datagrid/Datagrid";
@@ -23,6 +24,8 @@ import { type DefaultTheme, useTheme } from "@saleor/macaw-ui-next";
 import { type IntlShape, useIntl } from "react-intl";
 
 import { columnsMessages } from "./messages";
+import { getOrderTrackingCellState } from "./tracking";
+import { type OrderTrackingSummary } from "./useOrderTrackingSummaries";
 
 export const orderListStaticColumnAdapter = (
   emptyColumn: AvailableColumn,
@@ -57,6 +60,11 @@ export const orderListStaticColumnAdapter = (
       width: 200,
     },
     {
+      id: "tracking",
+      title: intl.formatMessage(columnsMessages.tracking),
+      width: 280,
+    },
+    {
       id: "net",
       title: intl.formatMessage(columnsMessages.net),
       width: 150,
@@ -81,13 +89,24 @@ export const orderListStaticColumnAdapter = (
 interface GetCellContentProps {
   columns: AvailableColumn[];
   orders: RelayToFlat<OrderListQuery["orders"]>;
+  trackingByOrderId: Map<string, OrderTrackingSummary>;
+  trackingLoading: boolean;
+  trackingHasError: boolean;
+  trackingProviderError: boolean;
 }
 
 function getDatagridRowDataIndex(row, removeArray) {
   return row + removeArray.filter(r => r <= row).length;
 }
 
-export const useGetCellContent = ({ columns, orders }: GetCellContentProps) => {
+export const useGetCellContent = ({
+  columns,
+  orders,
+  trackingByOrderId,
+  trackingLoading,
+  trackingHasError,
+  trackingProviderError,
+}: GetCellContentProps) => {
   const intl = useIntl();
   const { theme } = useTheme();
 
@@ -110,6 +129,15 @@ export const useGetCellContent = ({ columns, orders }: GetCellContentProps) => {
         return getPaymentCellContent(intl, theme, rowData);
       case "status":
         return getStatusCellContent(intl, theme, rowData);
+      case "tracking":
+        return getTrackingCellContent(
+          intl,
+          rowData,
+          trackingByOrderId,
+          trackingLoading,
+          trackingHasError,
+          trackingProviderError,
+        );
       case "net":
         return getNetCellContent(rowData);
       case "total":
@@ -161,6 +189,29 @@ function getStatusCellContent(
   }
 
   return readonlyTextCell("-");
+}
+
+export function getTrackingCellContent(
+  intl: IntlShape,
+  rowData: RelayToFlat<OrderListQuery["orders"]>[number],
+  trackingByOrderId: Map<string, OrderTrackingSummary>,
+  loading: boolean,
+  hasError: boolean,
+  providerError: boolean,
+): GridCell {
+  const state = getOrderTrackingCellState({
+    summary: trackingByOrderId.get(rowData.id),
+    loading,
+    hasError,
+    providerError,
+    intl,
+  });
+
+  if (state.tone) {
+    return statusCell(state.tone, state.label, COMMON_CELL_PROPS);
+  }
+
+  return readonlyTextCell(state.label);
 }
 
 const higherPriorityChargeStatuses = [OrderChargeStatusEnum.OVERCHARGED];

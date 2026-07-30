@@ -27,6 +27,10 @@ import { useOnboarding } from "@dashboard/welcomePage/WelcomePageOnboarding/onbo
 import { useEffect, useMemo } from "react";
 import { useIntl } from "react-intl";
 
+import {
+  getOrderListColumns,
+  shouldMigrateOrderListColumns,
+} from "../../components/OrderListDatagrid/utils";
 import OrderListPage from "../../components/OrderListPage/OrderListPage";
 import {
   orderDraftUrl,
@@ -47,6 +51,14 @@ const OrderList = ({ params }: OrderListProps) => {
   const navigate = useNavigator();
   const notify = useNotifier();
   const { updateListSettings, settings } = useListSettings(ListViews.ORDER_LIST);
+  const effectiveColumns = getOrderListColumns(settings.columns);
+  const orderListSettings = useMemo(
+    () => ({
+      ...settings,
+      columns: effectiveColumns,
+    }),
+    [effectiveColumns, settings],
+  );
   const { valueProvider } = useConditionalFilterContext();
 
   const { markOnboardingStepAsCompleted } = useOnboarding();
@@ -54,6 +66,11 @@ const OrderList = ({ params }: OrderListProps) => {
   useEffect(() => {
     markOnboardingStepAsCompleted("explore-orders");
   }, []);
+  useEffect(() => {
+    if (shouldMigrateOrderListColumns(settings.columns)) {
+      updateListSettings("columns", effectiveColumns ?? []);
+    }
+  }, [effectiveColumns, settings.columns, updateListSettings]);
 
   const {
     hasPresetsChanged,
@@ -143,7 +160,7 @@ const OrderList = ({ params }: OrderListProps) => {
         onRowClick={item => {
           navigate(orderUrl(item));
         }}
-        settings={settings}
+        settings={orderListSettings}
         currentTab={selectedPreset}
         disabled={!data}
         limits={limitOpts.data?.shop.limits}

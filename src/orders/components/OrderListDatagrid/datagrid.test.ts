@@ -13,11 +13,19 @@ import { type TextCell } from "@glideapps/glide-data-grid";
 import { testIntlInstance } from "@test/intl";
 import { renderHook } from "@testing-library/react";
 
-import { getCustomerCellContent, getPaymentCellContent, useGetCellContent } from "./datagrid";
+import {
+  getCustomerCellContent,
+  getPaymentCellContent,
+  getTrackingCellContent,
+  useGetCellContent,
+} from "./datagrid";
+import { type OrderTrackingSummary } from "./useOrderTrackingSummaries";
 
 jest.mock("@saleor/macaw-ui-next", () => ({
   useTheme: () => ({ theme: "defaultLight" }),
 }));
+
+type RowDataType = RelayToFlat<NonNullable<OrderListQuery["orders"]>>[number];
 
 describe("getCustomerCellContent", () => {
   it("should return billing address first name and last name when exists", () => {
@@ -80,6 +88,7 @@ describe("useGetCellContent", () => {
     { id: "status", title: "Status", width: 100 },
     { id: "net", title: "Net", width: 100 },
     { id: "total", title: "Total", width: 100 },
+    { id: "tracking", title: "Tracking", width: 100 },
   ];
 
   const mockOrders = [
@@ -100,7 +109,14 @@ describe("useGetCellContent", () => {
   it("should return correct cell content for each column", () => {
     // Arrange
     const { result } = renderHook(() =>
-      useGetCellContent({ columns: mockColumns, orders: mockOrders }),
+      useGetCellContent({
+        columns: mockColumns,
+        orders: mockOrders,
+        trackingByOrderId: new Map(),
+        trackingLoading: false,
+        trackingHasError: false,
+        trackingProviderError: false,
+      }),
     );
     const getCellContent = result.current;
     const contentOpts = { added: [], removed: [] } as unknown as GetCellContentOpts;
@@ -180,7 +196,14 @@ describe("useGetCellContent", () => {
   it("should return empty cell for invalid column", () => {
     // Arrange
     const { result } = renderHook(() =>
-      useGetCellContent({ columns: mockColumns, orders: mockOrders }),
+      useGetCellContent({
+        columns: mockColumns,
+        orders: mockOrders,
+        trackingByOrderId: new Map(),
+        trackingLoading: false,
+        trackingHasError: false,
+        trackingProviderError: false,
+      }),
     );
     const getCellContent = result.current;
     const contentOpts = { added: [], removed: [] } as unknown as GetCellContentOpts;
@@ -191,7 +214,14 @@ describe("useGetCellContent", () => {
 
   it("should return empty cell for removed row", () => {
     const { result } = renderHook(() =>
-      useGetCellContent({ columns: mockColumns, orders: mockOrders }),
+      useGetCellContent({
+        columns: mockColumns,
+        orders: mockOrders,
+        trackingByOrderId: new Map(),
+        trackingLoading: false,
+        trackingHasError: false,
+        trackingProviderError: false,
+      }),
     );
     const getCellContent = result.current;
     const contentOpts = { added: [1], removed: [] } as unknown as GetCellContentOpts;
@@ -201,7 +231,90 @@ describe("useGetCellContent", () => {
   });
 });
 
-type RowDataType = RelayToFlat<NonNullable<OrderListQuery["orders"]>>[number];
+describe("getTrackingCellContent", () => {
+  const order = {
+    id: "order-1",
+  } as RowDataType;
+
+  it("shows Delivered only when every package is delivered", () => {
+    // Arrange
+    const summary: OrderTrackingSummary = {
+      orderId: order.id,
+      hasTracking: true,
+      tracking: [
+        {
+          trackingNumber: "TRACK-1",
+          status: "Delivered",
+          checkedAt: "2026-07-30T10:00:00Z",
+        },
+        {
+          trackingNumber: "TRACK-2",
+          status: "Delivered_Other",
+          checkedAt: "2026-07-30T10:00:00Z",
+        },
+      ],
+    };
+
+    // Act
+    const result = getTrackingCellContent(
+      testIntlInstance,
+      order,
+      new Map([[order.id, summary]]),
+      false,
+      false,
+      false,
+    );
+
+    // Assert
+    expect(result).toEqual(
+      expect.objectContaining({
+        copyData: "Delivered · 2/2",
+        data: expect.objectContaining({
+          kind: "status-cell",
+          status: "success",
+          value: "Delivered · 2/2",
+        }),
+      }),
+    );
+  });
+
+  it("shows the active status and latest location", () => {
+    // Arrange
+    const summary: OrderTrackingSummary = {
+      orderId: order.id,
+      hasTracking: true,
+      tracking: [
+        {
+          trackingNumber: "TRACK-1",
+          status: "InTransit",
+          lastLocation: "ISC NEW YORK NY (USPS)",
+          checkedAt: "2026-07-30T10:00:00Z",
+        },
+      ],
+    };
+
+    // Act
+    const result = getTrackingCellContent(
+      testIntlInstance,
+      order,
+      new Map([[order.id, summary]]),
+      false,
+      false,
+      false,
+    );
+
+    // Assert
+    expect(result).toEqual(
+      expect.objectContaining({
+        copyData: "In transit · ISC NEW YORK NY (USPS)",
+        data: expect.objectContaining({
+          kind: "status-cell",
+          status: "warning",
+        }),
+      }),
+    );
+  });
+});
 
 describe("getPaymentCellContent", () => {
   it("should return Fully Paid when payment status is PAID", () => {

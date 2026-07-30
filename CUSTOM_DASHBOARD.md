@@ -90,6 +90,23 @@ never be committed to Git.
 Brevo remains the SMTP transport for outgoing transactional mail; its delivery
 events are not treated as customer-authored messages.
 
+## Order list tracking status
+
+The `All orders` datagrid includes a `Tracking status` column. For the orders
+visible on the current page, Dashboard sends their IDs to the protected
+tracking summary endpoint:
+
+```text
+https://api.ruslibrary.com/tracking/api/order-tracking-summary
+```
+
+The endpoint validates the active Saleor staff token and the `MANAGE_ORDERS`
+permission, then resolves fulfillment tracking numbers through the existing
+17TRACK integration. Active shipments are cached for 15 minutes. `Delivered`
+is a final cached status and the tracking app calls 17TRACK `stoptrack`, so
+delivered parcels are not polled again. The persistent cache is stored in the
+`tracking-status-data` Docker volume.
+
 ## Updating from Saleor
 
 Fetch the official tags and create an upgrade branch:

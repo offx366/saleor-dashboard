@@ -20,6 +20,7 @@ import { useLocation } from "react-router";
 
 import { orderListStaticColumnAdapter, useGetCellContent } from "./datagrid";
 import { messages } from "./messages";
+import { useOrderTrackingSummaries } from "./useOrderTrackingSummaries";
 import {
   canBeSorted,
   getColumnNameAndId,
@@ -101,9 +102,16 @@ export const OrderListDatagrid = ({
     },
     [rowAnchor, orders],
   );
+  const orderIds = useMemo(() => orders.map(order => order.id), [orders]);
+  const trackingEnabled = visibleColumns.some(column => column.id === "tracking");
+  const tracking = useOrderTrackingSummaries(orderIds, trackingEnabled);
   const getCellContent = useGetCellContent({
     columns: visibleColumns,
     orders,
+    trackingByOrderId: tracking.orders,
+    trackingLoading: tracking.loading,
+    trackingHasError: tracking.hasError,
+    trackingProviderError: tracking.providerError,
   });
 
   return (

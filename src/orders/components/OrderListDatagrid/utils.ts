@@ -52,17 +52,63 @@ export function canBeSorted(sort: OrderListUrlSortField) {
 const NET_COLUMN_ID = "net";
 const TOTAL_COLUMN_ID = "total";
 const CHANNEL_COLUMN_ID = "channel";
+const TRACKING_COLUMN_ID = "tracking";
+const FULFILLMENT_STATUS_COLUMN_ID = "status";
+
+export const oldDefaultOrderListColumns = [
+  "number",
+  "date",
+  "customer",
+  "payment",
+  "status",
+  "net",
+  "total",
+  "channel",
+];
+
+export const defaultOrderListColumnsWithTracking = [
+  "number",
+  "date",
+  "customer",
+  "payment",
+  "status",
+  "tracking",
+  "net",
+  "total",
+  "channel",
+];
+
+export const shouldMigrateOrderListColumns = (columns: string[] | undefined): boolean =>
+  columns?.length === oldDefaultOrderListColumns.length &&
+  oldDefaultOrderListColumns.every((column, index) => columns[index] === column);
+
+export const getOrderListColumns = (columns: string[] | undefined): string[] | undefined =>
+  shouldMigrateOrderListColumns(columns) ? defaultOrderListColumnsWithTracking : columns;
 
 /**
  * Column picker prepends newly toggled columns. Keep "net" immediately before
  * "total" (or before "channel" when total is hidden).
  */
 export function orderOrderListColumns(columns: string[]): string[] {
-  if (!columns.includes(NET_COLUMN_ID)) {
-    return columns;
+  let orderedColumns = columns;
+
+  if (columns.includes(TRACKING_COLUMN_ID)) {
+    const withoutTracking = columns.filter(columnId => columnId !== TRACKING_COLUMN_ID);
+    const statusIndex = withoutTracking.indexOf(FULFILLMENT_STATUS_COLUMN_ID);
+    const trackingIndex = statusIndex >= 0 ? statusIndex + 1 : withoutTracking.length;
+
+    orderedColumns = [
+      ...withoutTracking.slice(0, trackingIndex),
+      TRACKING_COLUMN_ID,
+      ...withoutTracking.slice(trackingIndex),
+    ];
   }
 
-  const withoutNet = columns.filter(columnId => columnId !== NET_COLUMN_ID);
+  if (!orderedColumns.includes(NET_COLUMN_ID)) {
+    return orderedColumns;
+  }
+
+  const withoutNet = orderedColumns.filter(columnId => columnId !== NET_COLUMN_ID);
   const insertBeforeIndex = withoutNet.includes(TOTAL_COLUMN_ID)
     ? withoutNet.indexOf(TOTAL_COLUMN_ID)
     : withoutNet.includes(CHANNEL_COLUMN_ID)
