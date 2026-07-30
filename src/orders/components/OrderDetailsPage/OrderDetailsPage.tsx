@@ -291,7 +291,12 @@ const OrderDetailsPage = (props: OrderDetailsPageProps) => {
         {order && !isOrderUnconfirmed && (
           <>
             <CardSpacer />
-            <OrderTrackingTimeline orderId={order.id} />
+            <OrderTrackingTimeline
+              orderId={order.id}
+              destinationCountryCode={
+                order.shippingAddress?.country.code ?? order.billingAddress?.country.code
+              }
+            />
             <CardSpacer />
             <OrderSummary
               order={order}

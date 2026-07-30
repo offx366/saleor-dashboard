@@ -19,7 +19,7 @@ import { FormattedMessage, type IntlShape, useIntl } from "react-intl";
 import styles from "./OrderTrackingTimeline.module.css";
 import {
   getAlternativeTrackingLink,
-  getOfficialTrackingLink,
+  getOfficialTrackingLinks,
 } from "./trackingLinks";
 import { getDurationParts, getTrackingMetrics } from "./trackingMetrics";
 
@@ -27,6 +27,7 @@ const PREVIEW_EVENT_COUNT = 5;
 
 interface OrderTrackingTimelineProps {
   orderId: string;
+  destinationCountryCode?: string;
 }
 
 const formatDateTime = (date: Date, intl: IntlShape): string =>
@@ -132,10 +133,12 @@ const getEventLocation = (event: TrackingTimelineEvent): string => {
 
 const TrackingItem = ({
   tracking,
+  destinationCountryCode,
   expanded,
   onToggle,
 }: {
   tracking: TrackingSummary;
+  destinationCountryCode?: string;
   expanded: boolean;
   onToggle: () => void;
 }): JSX.Element => {
@@ -148,7 +151,10 @@ const TrackingItem = ({
   const statusLabel = getTrackingStatusLabel(tracking.status, intl);
   const statusTone = getTrackingStatusTone(tracking.status);
   const durationLabel = formatDuration(metrics.durationMs, intl);
-  const officialTrackingLink = getOfficialTrackingLink(tracking);
+  const officialTrackingLinks = getOfficialTrackingLinks(
+    tracking,
+    destinationCountryCode,
+  );
   const alternativeTrackingLink = getAlternativeTrackingLink(
     tracking.trackingNumber,
   );
@@ -167,8 +173,9 @@ const TrackingItem = ({
           <div className={styles.trackingNumberRow}>
             <Text fontWeight="bold">{tracking.trackingNumber}</Text>
             <div className={styles.trackingLinks}>
-              {officialTrackingLink && (
+              {officialTrackingLinks.map((officialTrackingLink) => (
                 <a
+                  key={officialTrackingLink.label}
                   className={styles.externalLink}
                   href={officialTrackingLink.url}
                   target="_blank"
@@ -181,7 +188,7 @@ const TrackingItem = ({
                     values={{ carrier: officialTrackingLink.label }}
                   />
                 </a>
-              )}
+              ))}
               <a
                 className={styles.externalLink}
                 href={alternativeTrackingLink.url}
@@ -367,6 +374,7 @@ const TrackingItem = ({
 
 export const OrderTrackingTimeline = ({
   orderId,
+  destinationCountryCode,
 }: OrderTrackingTimelineProps): JSX.Element => {
   const [data, setData] = useState<OrderTrackingResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -502,6 +510,7 @@ export const OrderTrackingTimeline = ({
               <TrackingItem
                 key={item.trackingNumber}
                 tracking={item}
+                destinationCountryCode={destinationCountryCode}
                 expanded={expandedTrackingNumbers.has(item.trackingNumber)}
                 onToggle={() => toggleExpanded(item.trackingNumber)}
               />

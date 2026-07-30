@@ -49,6 +49,30 @@ export const getOfficialTrackingLink = (
   return undefined;
 };
 
+const getUspsTrackingLink = (trackingNumber: string): TrackingLink => ({
+  label: "USPS",
+  url: `https://tools.usps.com/go/TrackConfirmAction?tLabels=${encodeURIComponent(trackingNumber.trim())}`,
+});
+
+export const getOfficialTrackingLinks = (
+  tracking: TrackingSummary,
+  destinationCountryCode?: string,
+): TrackingLink[] => {
+  const primaryLink = getOfficialTrackingLink(tracking);
+  const links = primaryLink ? [primaryLink] : [];
+  const isUnitedStatesDestination =
+    destinationCountryCode?.trim().toUpperCase() === "US";
+
+  if (
+    isUnitedStatesDestination &&
+    !links.some((link) => link.label === "USPS")
+  ) {
+    links.push(getUspsTrackingLink(tracking.trackingNumber));
+  }
+
+  return links;
+};
+
 export const getAlternativeTrackingLink = (
   trackingNumber: string,
 ): TrackingLink => ({
