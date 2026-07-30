@@ -148,6 +148,7 @@ export const defaultListSettings: AppListViewSettings = {
       "net",
       "total",
       "channel",
+      "country",
       "tracking",
     ],
   },

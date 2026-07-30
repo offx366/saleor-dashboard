@@ -60,6 +60,11 @@ export const orderListStaticColumnAdapter = (
       width: 200,
     },
     {
+      id: "country",
+      title: intl.formatMessage(columnsMessages.country),
+      width: 180,
+    },
+    {
       id: "tracking",
       title: intl.formatMessage(columnsMessages.tracking),
       width: 280,
@@ -129,6 +134,8 @@ export const useGetCellContent = ({
         return getPaymentCellContent(intl, theme, rowData);
       case "status":
         return getStatusCellContent(intl, theme, rowData);
+      case "country":
+        return getCountryCellContent(rowData);
       case "tracking":
         return getTrackingCellContent(
           intl,
@@ -212,6 +219,32 @@ export function getTrackingCellContent(
   }
 
   return readonlyTextCell(state.label);
+}
+
+const getCountryFlag = (countryCode: string): string => {
+  const normalizedCode = countryCode.trim().toUpperCase();
+
+  if (!/^[A-Z]{2}$/.test(normalizedCode)) {
+    return "";
+  }
+
+  return [...normalizedCode]
+    .map(character => String.fromCodePoint(127397 + character.charCodeAt(0)))
+    .join("");
+};
+
+export function getCountryCellContent(
+  rowData: RelayToFlat<OrderListQuery["orders"]>[number],
+): TextCell {
+  const country = rowData?.shippingAddress?.country || rowData?.billingAddress?.country;
+
+  if (!country?.country) {
+    return readonlyTextCell("-");
+  }
+
+  const flag = getCountryFlag(country.code);
+
+  return readonlyTextCell(flag ? `${flag} ${country.country}` : country.country);
 }
 
 const higherPriorityChargeStatuses = [OrderChargeStatusEnum.OVERCHARGED];

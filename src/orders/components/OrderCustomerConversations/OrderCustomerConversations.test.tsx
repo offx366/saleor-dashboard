@@ -1,5 +1,6 @@
 import Wrapper from "@test/wrapper";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import { OrderCustomerConversations } from "./OrderCustomerConversations";
 
@@ -101,7 +102,11 @@ describe("OrderCustomerConversations", () => {
     // Act
     render(
       <Wrapper>
-        <OrderCustomerConversations email="customer@example.com" />
+        <OrderCustomerConversations
+          email="customer@example.com"
+          orderId="T3JkZXI6NTAx"
+          orderNumber="501"
+        />
       </Wrapper>,
     );
 
@@ -127,7 +132,7 @@ describe("OrderCustomerConversations", () => {
     // Arrange & Act
     render(
       <Wrapper>
-        <OrderCustomerConversations email={null} />
+        <OrderCustomerConversations email={null} orderId={null} orderNumber={null} />
       </Wrapper>,
     );
 
@@ -145,7 +150,11 @@ describe("OrderCustomerConversations", () => {
 
     render(
       <Wrapper>
-        <OrderCustomerConversations email="customer@example.com" />
+        <OrderCustomerConversations
+          email="customer@example.com"
+          orderId="T3JkZXI6NTAx"
+          orderNumber="501"
+        />
       </Wrapper>,
     );
 
@@ -159,5 +168,60 @@ describe("OrderCustomerConversations", () => {
       expect(screen.getByText("Do you stock this product?")).toBeInTheDocument();
     });
     expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends an email for the current order and refreshes the conversation history", async () => {
+    // Arrange
+    mockAuthenticatedFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => conversationsResponse,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => conversationsResponse,
+      });
+
+    const user = userEvent.setup();
+
+    render(
+      <Wrapper>
+        <OrderCustomerConversations
+          email="customer@example.com"
+          orderId="T3JkZXI6NTAx"
+          orderNumber="501"
+        />
+      </Wrapper>,
+    );
+
+    await screen.findByText("Do you stock this product?");
+
+    // Act
+    await user.type(screen.getByLabelText("Subject"), "Delivery update");
+    await user.type(screen.getByLabelText("Message"), "Your package is on the way.");
+    await user.click(screen.getByRole("button", { name: "Send email" }));
+
+    // Assert
+    await screen.findByText("Email sent");
+    expect(mockAuthenticatedFetch).toHaveBeenNthCalledWith(
+      2,
+      "https://chat.ruslibrary.com/cw/ghw-bot",
+      expect.objectContaining({
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send-email",
+          orderId: "T3JkZXI6NTAx",
+          subject: "Delivery update",
+          message: "Your package is on the way.",
+        }),
+      }),
+    );
+    expect(screen.getByLabelText("Message")).toHaveValue("");
+    expect(mockAuthenticatedFetch).toHaveBeenCalledTimes(3);
   });
 });

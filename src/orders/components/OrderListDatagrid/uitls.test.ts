@@ -4,7 +4,7 @@ import { type RelayToFlat } from "@dashboard/types";
 
 import {
   canBeSorted,
-  defaultOrderListColumnsWithTracking,
+  defaultOrderListColumnsWithCountryAndTracking,
   getColumnNameAndId,
   getOrderListColumns,
   getOrdersRowsLength,
@@ -140,20 +140,39 @@ describe("OrderListDatagrid utils", () => {
       // Assert
       expect(result).toEqual(["number", "date", "customer", "status", "net", "total", "tracking"]);
     });
+
+    it("always places country immediately before tracking", () => {
+      // Arrange
+      const columns = ["tracking", "number", "country", "date", "customer", "status", "total"];
+
+      // Act
+      const result = orderOrderListColumns(columns);
+
+      // Assert
+      expect(result).toEqual([
+        "number",
+        "date",
+        "customer",
+        "status",
+        "total",
+        "country",
+        "tracking",
+      ]);
+    });
   });
 
-  describe("tracking column migration", () => {
-    it("adds tracking to the old default order columns", () => {
+  describe("country and tracking column migration", () => {
+    it("adds country and tracking to the old default order columns", () => {
       // Arrange & Act
       const shouldMigrate = shouldMigrateOrderListColumns(oldDefaultOrderListColumns);
       const columns = getOrderListColumns(oldDefaultOrderListColumns);
 
       // Assert
       expect(shouldMigrate).toBe(true);
-      expect(columns).toEqual(defaultOrderListColumnsWithTracking);
+      expect(columns).toEqual(defaultOrderListColumnsWithCountryAndTracking);
     });
 
-    it("adds tracking to a customized column list", () => {
+    it("adds country and tracking to a customized column list", () => {
       // Arrange
       const customColumns = ["number", "customer", "total"];
 
@@ -163,22 +182,31 @@ describe("OrderListDatagrid utils", () => {
         "number",
         "customer",
         "total",
+        "country",
         "tracking",
       ]);
     });
 
-    it("moves tracking to the far right after it has been added", () => {
+    it("moves country and tracking to their fixed positions after migration", () => {
       // Arrange
       const columnsWithTracking = ["number", "customer", "tracking", "total"];
 
       // Act & Assert
-      expect(shouldMigrateOrderListColumns(columnsWithTracking)).toBe(false);
+      expect(shouldMigrateOrderListColumns(columnsWithTracking)).toBe(true);
       expect(getOrderListColumns(columnsWithTracking)).toEqual([
         "number",
         "customer",
         "total",
+        "country",
         "tracking",
       ]);
+    });
+
+    it("does not migrate when both fixed columns already exist", () => {
+      const columns = ["number", "country", "tracking"];
+
+      expect(shouldMigrateOrderListColumns(columns)).toBe(false);
+      expect(getOrderListColumns(columns)).toEqual(columns);
     });
   });
 });

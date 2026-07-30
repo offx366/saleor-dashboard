@@ -13849,6 +13849,13 @@ export const OrderListDocument = gql`
         billingAddress {
           ...Address
         }
+        shippingAddress {
+          id
+          country {
+            code
+            country
+          }
+        }
         channel {
           name
           id

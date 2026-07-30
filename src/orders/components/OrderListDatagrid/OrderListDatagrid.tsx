@@ -64,7 +64,7 @@ export const OrderListDatagrid = ({
   const { handlers, staticColumns, visibleColumns, selectedColumns } = useColumns({
     // Version the persisted layout so staff accounts created before the
     // tracking column do not keep hiding it through legacy grid metadata.
-    gridName: "order_list_tracking_v1",
+    gridName: "order_list_country_tracking_v2",
     staticColumns: memoizedStaticColumns,
     selectedColumns: settings?.columns ?? [],
     mapColumnsOnSave: orderOrderListColumns,
@@ -109,9 +109,15 @@ export const OrderListDatagrid = ({
   const tracking = useOrderTrackingSummaries(orderIds, trackingEnabled);
   const handleColumnMove = useCallback(
     (startIndex: number, endIndex: number): void => {
+      const countryIndex = visibleColumns.findIndex(column => column.id === "country");
       const trackingIndex = visibleColumns.findIndex(column => column.id === "tracking");
+      const firstFixedIndex = countryIndex >= 0 ? countryIndex : trackingIndex;
 
-      if (startIndex === trackingIndex || endIndex === trackingIndex) {
+      if (
+        startIndex === countryIndex ||
+        startIndex === trackingIndex ||
+        (firstFixedIndex >= 0 && endIndex >= firstFixedIndex)
+      ) {
         return;
       }
 

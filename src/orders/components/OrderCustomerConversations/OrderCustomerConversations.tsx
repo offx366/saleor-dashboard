@@ -1,8 +1,8 @@
 import { DashboardCard } from "@dashboard/components/Card";
 import { Placeholder } from "@dashboard/components/Placeholder";
 import { createFetch } from "@dashboard/legacy-sdk";
-import { Button, Skeleton, Text } from "@saleor/macaw-ui-next";
-import { ExternalLink, RefreshCw } from "lucide-react";
+import { Button, Input, Skeleton, Text, Textarea } from "@saleor/macaw-ui-next";
+import { ExternalLink, RefreshCw, Send } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 
@@ -47,17 +47,26 @@ interface CustomerConversationsResponse {
 
 interface OrderCustomerConversationsProps {
   email: string | null | undefined;
+  orderId: string | null | undefined;
+  orderNumber: string | null | undefined;
 }
 
 const getTimestamp = (value: number): Date => new Date(value * 1000);
 
 export const OrderCustomerConversations = ({
   email,
+  orderId,
+  orderNumber,
 }: OrderCustomerConversationsProps): JSX.Element => {
   const intl = useIntl();
   const [data, setData] = useState<CustomerConversationsResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendHasError, setSendHasError] = useState(false);
+  const [sendSucceeded, setSendSucceeded] = useState(false);
 
   const loadConversations = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
@@ -103,6 +112,45 @@ export const OrderCustomerConversations = ({
     },
     [email],
   );
+
+  const sendEmail = useCallback(async (): Promise<void> => {
+    const trimmedMessage = message.trim();
+
+    if (!email || !orderId || !trimmedMessage || sending) {
+      return;
+    }
+
+    setSending(true);
+    setSendHasError(false);
+    setSendSucceeded(false);
+
+    try {
+      const response = await authenticatedFetch(CUSTOMER_CONVERSATIONS_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "send-email",
+          orderId,
+          subject: subject.trim(),
+          message: trimmedMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Customer email request failed with ${response.status}`);
+      }
+
+      setMessage("");
+      setSendSucceeded(true);
+      await loadConversations();
+    } catch {
+      setSendHasError(true);
+    } finally {
+      setSending(false);
+    }
+  }, [email, loadConversations, message, orderId, sending, subject]);
 
   useEffect(
     function loadCustomerConversations() {
@@ -176,6 +224,94 @@ export const OrderCustomerConversations = ({
         )}
       </DashboardCard.Header>
       <DashboardCard.Content>
+        {!!email && !!orderId && (
+          <div className={styles.composer}>
+            <Text fontWeight="bold">
+              <FormattedMessage id="sBifRp" defaultMessage="Write an email" />
+            </Text>
+            <Text size={2} color="default2">
+              <FormattedMessage
+                id="mok1OX"
+                defaultMessage="The reply will be sent to {email} from info@globalhealingweb.com."
+                values={{ email }}
+              />
+            </Text>
+            <Input
+              name="customer-email-subject"
+              label={intl.formatMessage({
+                id: 'LLtKhp',
+                defaultMessage: "Subject",
+              })}
+              placeholder={
+                orderNumber
+                  ? intl.formatMessage(
+                      {
+                        id: 'I4Qr0O',
+                        defaultMessage: "Order #{number}",
+                      },
+                      { number: orderNumber },
+                    )
+                  : undefined
+              }
+              value={subject}
+              maxLength={200}
+              disabled={sending}
+              onChange={event => {
+                setSubject(event.target.value);
+                setSendSucceeded(false);
+              }}
+            />
+            <Textarea
+              name="customer-email-message"
+              label={intl.formatMessage({
+                id: 'T7Ry38',
+                defaultMessage: "Message",
+              })}
+              placeholder={intl.formatMessage({
+                id: 'FxOv+L',
+                defaultMessage: "Write your reply to the customer…",
+              })}
+              value={message}
+              maxLength={10_000}
+              rows={4}
+              disabled={sending}
+              onChange={event => {
+                setMessage(event.target.value);
+                setSendSucceeded(false);
+              }}
+            />
+            <div className={styles.composerActions}>
+              <div>
+                {sendHasError && (
+                  <Text size={2} color="critical1">
+                    <FormattedMessage
+                      id="3xwmm9"
+                      defaultMessage="Email could not be sent. Please try again."
+                    />
+                  </Text>
+                )}
+                {sendSucceeded && (
+                  <Text size={2} color="success1">
+                    <FormattedMessage id="as7ksh" defaultMessage="Email sent" />
+                  </Text>
+                )}
+              </div>
+              <Button
+                variant="primary"
+                onClick={() => void sendEmail()}
+                disabled={sending || !message.trim()}
+                data-test-id="send-customer-email"
+              >
+                <Send size={16} />
+                {sending ? (
+                  <FormattedMessage id="ff2VGL" defaultMessage="Sending…" />
+                ) : (
+                  <FormattedMessage id="sZIoMy" defaultMessage="Send email" />
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
         {!email ? (
           <Placeholder>
             <FormattedMessage id="0FVOg6" defaultMessage="No customer email is available" />

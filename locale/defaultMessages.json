@@ -1208,6 +1208,9 @@
   "3xv4ez": {
     "string": "Go to users/staff members"
   },
+  "3xwmm9": {
+    "string": "Email could not be sent. Please try again."
+  },
   "3y4r+z": {
     "context": "channel settings",
     "string": "Channel Settings"
@@ -3712,6 +3715,9 @@
     "context": "alert",
     "string": "SKU limit reached"
   },
+  "FxOv+L": {
+    "string": "Write your reply to the customer…"
+  },
   "Fxa6xp": {
     "context": "page header",
     "string": "Add Collection"
@@ -4259,6 +4265,9 @@
   "I40r9Y": {
     "context": "WarehouseSettings all warehouses description",
     "string": "If selected customer will be able to choose this warehouse as pickup point.{break}Ordered products can be shipped here from a different warehouse"
+  },
+  "I4Qr0O": {
+    "string": "Order #{number}"
   },
   "I5vC7T": {
     "context": "button label",
@@ -4964,6 +4973,9 @@
   "LLrOK3": {
     "context": "paragraph, description in manual refund card",
     "string": "Create a manual refund for non-integrated payments"
+  },
+  "LLtKhp": {
+    "string": "Subject"
   },
   "LOSNq0": {
     "context": "dialog header",
@@ -6582,6 +6594,9 @@
   "T7Dju4": {
     "context": "replaced quantity column in line matrix",
     "string": "Replaced"
+  },
+  "T7Ry38": {
+    "string": "Message"
   },
   "T83iU7": {
     "string": "Search categories..."
@@ -8270,6 +8285,9 @@
   "arT1bu": {
     "string": "Warehouse updated"
   },
+  "as7ksh": {
+    "string": "Email sent"
+  },
   "auxEP1": {
     "context": "input placeholder",
     "string": "Search by attribute name"
@@ -9240,6 +9258,9 @@
   "fdJjic": {
     "context": "dialog title for removing product from draft order",
     "string": "Remove product"
+  },
+  "ff2VGL": {
+    "string": "Sending…"
   },
   "ffvXcE": {
     "context": "shipping method channel status when newly added",
@@ -10835,6 +10856,9 @@
     "context": "model type detail cogs menu, opens the delete-confirmation dialog",
     "string": "Delete model type"
   },
+  "mok1OX": {
+    "string": "The reply will be sent to {email} from info@globalhealingweb.com."
+  },
   "mqrPth": {
     "string": "Shipment journey"
   },
@@ -12055,6 +12079,9 @@
     "context": "no products placeholder",
     "string": "No products available"
   },
+  "sBifRp": {
+    "string": "Write an email"
+  },
   "sDMNfc": {
     "context": "bulk issue structure item",
     "string": "Bulk Issue"
@@ -12124,6 +12151,9 @@
   "sZ8CgC": {
     "context": "screen reader announcement when matrix line is expanded",
     "string": "Shipments expanded for {productName}"
+  },
+  "sZIoMy": {
+    "string": "Send email"
   },
   "saKXY3": {
     "context": "product label",

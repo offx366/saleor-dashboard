@@ -14,6 +14,7 @@ import { testIntlInstance } from "@test/intl";
 import { renderHook } from "@testing-library/react";
 
 import {
+  getCountryCellContent,
   getCustomerCellContent,
   getPaymentCellContent,
   getTrackingCellContent,
@@ -78,6 +79,44 @@ describe("getCustomerCellContent", () => {
   });
 });
 
+describe("getCountryCellContent", () => {
+  it("uses shipping country and renders its flag", () => {
+    const data = {
+      shippingAddress: {
+        country: {
+          code: "DE",
+          country: "Germany",
+        },
+      },
+      billingAddress: {
+        country: {
+          code: "US",
+          country: "United States",
+        },
+      },
+    } as RowDataType;
+
+    const result = getCountryCellContent(data);
+
+    expect(result.data).toEqual("🇩🇪 Germany");
+    expect(result.displayData).toEqual("🇩🇪 Germany");
+  });
+
+  it("falls back to billing country when shipping address is unavailable", () => {
+    const data = {
+      shippingAddress: null,
+      billingAddress: {
+        country: {
+          code: "US",
+          country: "United States",
+        },
+      },
+    } as RowDataType;
+
+    expect(getCountryCellContent(data).data).toEqual("🇺🇸 United States");
+  });
+});
+
 describe("useGetCellContent", () => {
   // Arrange
   const mockColumns: AvailableColumn[] = [
@@ -88,6 +127,7 @@ describe("useGetCellContent", () => {
     { id: "status", title: "Status", width: 100 },
     { id: "net", title: "Net", width: 100 },
     { id: "total", title: "Total", width: 100 },
+    { id: "country", title: "Country", width: 100 },
     { id: "tracking", title: "Tracking", width: 100 },
   ];
 
@@ -101,6 +141,12 @@ describe("useGetCellContent", () => {
       paymentStatus: "PAID" as PaymentChargeStatusEnum,
       status: "FULFILLED" as OrderStatus,
       billingAddress: null,
+      shippingAddress: {
+        country: {
+          code: "DE",
+          country: "Germany",
+        },
+      },
       subtotal: { net: { amount: 80, currency: "USD" } },
       total: { gross: { amount: 100, currency: "USD" } },
     },
@@ -190,6 +236,15 @@ describe("useGetCellContent", () => {
       data: { currency: "USD", kind: "money-cell", value: 100 },
       kind: "custom",
       readonly: false,
+    });
+    expect(getCellContent([7, 0], contentOpts)).toEqual({
+      allowOverlay: false,
+      cursor: "pointer",
+      data: "🇩🇪 Germany",
+      displayData: "🇩🇪 Germany",
+      kind: "text",
+      readonly: true,
+      style: "normal",
     });
   });
 

@@ -373,7 +373,11 @@ const OrderDetailsPage = (props: OrderDetailsPageProps) => {
         />
         <CardSpacer />
         <Divider />
-        <OrderCustomerConversations email={order?.userEmail || order?.user?.email} />
+        <OrderCustomerConversations
+          email={order?.userEmail || order?.user?.email}
+          orderId={order?.id}
+          orderNumber={order?.number}
+        />
         <CardSpacer />
         <Divider />
         {!isOrderUnconfirmed && (

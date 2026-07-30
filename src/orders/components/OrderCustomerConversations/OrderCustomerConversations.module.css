@@ -1,3 +1,19 @@
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mu-spacing-3);
+  margin-bottom: var(--mu-spacing-5);
+  border-bottom: 1px solid var(--mu-colors-border-default1);
+  padding-bottom: var(--mu-spacing-5);
+}
+
+.composerActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mu-spacing-3);
+}
+
 .scrollArea {
   display: flex;
   flex-direction: column;

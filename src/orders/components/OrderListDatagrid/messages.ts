@@ -40,6 +40,10 @@ export const columnsMessages = defineMessages({
     id: "NWxomz",
     defaultMessage: "Fulfillment status",
   },
+  country: {
+    id: "vONi+O",
+    defaultMessage: "Country",
+  },
   tracking: {
     id: "WKITZr",
     defaultMessage: "Tracking status",
