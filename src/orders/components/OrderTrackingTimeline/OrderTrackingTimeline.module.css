@@ -34,6 +34,13 @@
   gap: var(--mu-spacing-3);
 }
 
+.trackingLinks {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--mu-spacing-3);
+}
+
 .externalLink {
   display: inline-flex;
   align-items: center;

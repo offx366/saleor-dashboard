@@ -3290,9 +3290,6 @@
     "context": "dialog header, title",
     "string": "Invoice Generation"
   },
-  "DillEz": {
-    "string": "Open in 17TRACK"
-  },
   "DnghuS": {
     "context": "channel create",
     "string": "New Channel"
@@ -5635,6 +5632,9 @@
   "OUMqG1": {
     "context": "label for remaining balance to capture",
     "string": "Remaining balance"
+  },
+  "OUVUGL": {
+    "string": "Official {carrier}"
   },
   "OUX4LB": {
     "context": "input label",
@@ -11805,6 +11805,9 @@
   "quV5zH": {
     "context": "dialog title",
     "string": "Delete Token"
+  },
+  "qusBTQ": {
+    "string": "Alternative tracker"
   },
   "qvaap2": {
     "context": "order detail page, top-bar metadata button tooltip",

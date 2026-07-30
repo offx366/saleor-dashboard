@@ -1,4 +1,5 @@
 import { type PillCell } from "@dashboard/components/Datagrid/customCells/PillCell";
+import { type ThumbnailCell } from "@dashboard/components/Datagrid/customCells/ThumbnailCell";
 import { type GetCellContentOpts } from "@dashboard/components/Datagrid/Datagrid";
 import { type AvailableColumn } from "@dashboard/components/Datagrid/types";
 import {
@@ -61,7 +62,9 @@ describe("getCustomerCellContent", () => {
   });
   it("should return - when no user email and billing address", () => {
     // Arrange
-    const data = {} as RelayToFlat<NonNullable<OrderListQuery["orders"]>>[number];
+    const data = {} as RelayToFlat<
+      NonNullable<OrderListQuery["orders"]>
+    >[number];
     // Act
     const result = getCustomerCellContent(data);
 
@@ -97,9 +100,20 @@ describe("getCountryCellContent", () => {
     } as RowDataType;
 
     const result = getCountryCellContent(data);
+    const thumbnailResult = result as ThumbnailCell;
 
-    expect(result.data).toEqual("🇩🇪 Germany");
-    expect(result.displayData).toEqual("🇩🇪 Germany");
+    expect(thumbnailResult.kind).toEqual("custom");
+    expect(thumbnailResult.copyData).toEqual("Germany");
+    expect(thumbnailResult.data).toMatchObject({
+      kind: "thumbnail-cell",
+      imageAspectRatio: 3 / 2,
+      name: "Germany",
+    });
+    expect(
+      thumbnailResult.data.image.startsWith(
+        "data:image/svg+xml;charset=utf-8,",
+      ),
+    ).toBe(true);
   });
 
   it("falls back to billing country when shipping address is unavailable", () => {
@@ -113,7 +127,14 @@ describe("getCountryCellContent", () => {
       },
     } as RowDataType;
 
-    expect(getCountryCellContent(data).data).toEqual("🇺🇸 United States");
+    expect(getCountryCellContent(data)).toMatchObject({
+      copyData: "United States",
+      data: {
+        kind: "thumbnail-cell",
+        imageAspectRatio: 3 / 2,
+        name: "United States",
+      },
+    });
   });
 });
 
@@ -165,7 +186,10 @@ describe("useGetCellContent", () => {
       }),
     );
     const getCellContent = result.current;
-    const contentOpts = { added: [], removed: [] } as unknown as GetCellContentOpts;
+    const contentOpts = {
+      added: [],
+      removed: [],
+    } as unknown as GetCellContentOpts;
 
     // Act & Assert
     expect(getCellContent([0, 0], contentOpts)).toEqual({
@@ -202,7 +226,10 @@ describe("useGetCellContent", () => {
       copyData: "PAID",
       cursor: "pointer",
       data: {
-        color: getStatusColor({ status: "error", currentTheme: "defaultLight" }),
+        color: getStatusColor({
+          status: "error",
+          currentTheme: "defaultLight",
+        }),
         kind: "auto-tags-cell",
         value: "PAID",
       },
@@ -214,7 +241,10 @@ describe("useGetCellContent", () => {
       copyData: "Fulfilled",
       cursor: "pointer",
       data: {
-        color: getStatusColor({ status: "success", currentTheme: "defaultLight" }),
+        color: getStatusColor({
+          status: "success",
+          currentTheme: "defaultLight",
+        }),
         kind: "auto-tags-cell",
         value: "Fulfilled",
       },
@@ -237,14 +267,17 @@ describe("useGetCellContent", () => {
       kind: "custom",
       readonly: false,
     });
-    expect(getCellContent([7, 0], contentOpts)).toEqual({
-      allowOverlay: false,
+    expect(getCellContent([7, 0], contentOpts)).toMatchObject({
+      allowOverlay: true,
+      copyData: "Germany",
       cursor: "pointer",
-      data: "🇩🇪 Germany",
-      displayData: "🇩🇪 Germany",
-      kind: "text",
-      readonly: true,
-      style: "normal",
+      data: {
+        imageAspectRatio: 3 / 2,
+        kind: "thumbnail-cell",
+        name: "Germany",
+      },
+      kind: "custom",
+      readonly: false,
     });
   });
 
@@ -261,7 +294,10 @@ describe("useGetCellContent", () => {
       }),
     );
     const getCellContent = result.current;
-    const contentOpts = { added: [], removed: [] } as unknown as GetCellContentOpts;
+    const contentOpts = {
+      added: [],
+      removed: [],
+    } as unknown as GetCellContentOpts;
 
     // Act & Assert
     expect((getCellContent([10, 0], contentOpts) as TextCell).data).toBe("");
@@ -279,7 +315,10 @@ describe("useGetCellContent", () => {
       }),
     );
     const getCellContent = result.current;
-    const contentOpts = { added: [1], removed: [] } as unknown as GetCellContentOpts;
+    const contentOpts = {
+      added: [1],
+      removed: [],
+    } as unknown as GetCellContentOpts;
 
     // Act & Assert
     expect((getCellContent([0, 1], contentOpts) as TextCell).data).toBe("");
@@ -379,7 +418,11 @@ describe("getPaymentCellContent", () => {
     } as RowDataType;
 
     // Act
-    const result = getPaymentCellContent(testIntlInstance, "defaultLight", data);
+    const result = getPaymentCellContent(
+      testIntlInstance,
+      "defaultLight",
+      data,
+    );
 
     // Assert
     expect((result.data as PillCell["data"]).value).toEqual("PAID");
@@ -392,7 +435,11 @@ describe("getPaymentCellContent", () => {
     } as RowDataType;
 
     // Act
-    const result = getPaymentCellContent(testIntlInstance, "defaultLight", data);
+    const result = getPaymentCellContent(
+      testIntlInstance,
+      "defaultLight",
+      data,
+    );
 
     // Assert
     expect((result.data as PillCell["data"]).value).toEqual("Overcharged");

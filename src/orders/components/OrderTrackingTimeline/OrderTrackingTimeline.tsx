@@ -17,6 +17,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FormattedMessage, type IntlShape, useIntl } from "react-intl";
 
 import styles from "./OrderTrackingTimeline.module.css";
+import {
+  getAlternativeTrackingLink,
+  getOfficialTrackingLink,
+} from "./trackingLinks";
 import { getDurationParts, getTrackingMetrics } from "./trackingMetrics";
 
 const PREVIEW_EVENT_COUNT = 5;
@@ -35,7 +39,10 @@ const formatDateTime = (date: Date, intl: IntlShape): string =>
     minute: "2-digit",
   })}`;
 
-const formatDuration = (durationMs: number | undefined, intl: IntlShape): string => {
+const formatDuration = (
+  durationMs: number | undefined,
+  intl: IntlShape,
+): string => {
   if (durationMs === undefined) {
     return intl.formatMessage({
       id: "Ph58Wf",
@@ -65,7 +72,10 @@ const formatDuration = (durationMs: number | undefined, intl: IntlShape): string
   );
 };
 
-const formatRelativeTime = (date: Date | undefined, intl: IntlShape): string => {
+const formatRelativeTime = (
+  date: Date | undefined,
+  intl: IntlShape,
+): string => {
   if (!date) {
     return intl.formatMessage({
       id: "xRwqzV",
@@ -77,14 +87,23 @@ const formatRelativeTime = (date: Date | undefined, intl: IntlShape): string => 
   const absoluteDifference = Math.abs(differenceMs);
 
   if (absoluteDifference < 60 * 60 * 1000) {
-    return intl.formatRelativeTime(Math.round(differenceMs / (60 * 1000)), "minute");
+    return intl.formatRelativeTime(
+      Math.round(differenceMs / (60 * 1000)),
+      "minute",
+    );
   }
 
   if (absoluteDifference < 24 * 60 * 60 * 1000) {
-    return intl.formatRelativeTime(Math.round(differenceMs / (60 * 60 * 1000)), "hour");
+    return intl.formatRelativeTime(
+      Math.round(differenceMs / (60 * 60 * 1000)),
+      "hour",
+    );
   }
 
-  return intl.formatRelativeTime(Math.round(differenceMs / (24 * 60 * 60 * 1000)), "day");
+  return intl.formatRelativeTime(
+    Math.round(differenceMs / (24 * 60 * 60 * 1000)),
+    "day",
+  );
 };
 
 const getEventDate = (event: TrackingTimelineEvent): Date | undefined => {
@@ -102,15 +121,14 @@ const getEventDate = (event: TrackingTimelineEvent): Date | undefined => {
 const getEventLocation = (event: TrackingTimelineEvent): string => {
   const parts = Array.from(
     new Set(
-      [event.location, event.city, event.country].filter((value): value is string => !!value),
+      [event.location, event.city, event.country].filter(
+        (value): value is string => !!value,
+      ),
     ),
   );
 
   return parts.join(", ");
 };
-
-const getTrackingLink = (trackingNumber: string): string =>
-  `https://t.17track.net/en#nums=${encodeURIComponent(trackingNumber)}`;
 
 const TrackingItem = ({
   tracking,
@@ -124,10 +142,16 @@ const TrackingItem = ({
   const intl = useIntl();
   const metrics = getTrackingMetrics(tracking);
   const events = tracking.events ?? [];
-  const visibleEvents = expanded ? events : events.slice(0, PREVIEW_EVENT_COUNT);
+  const visibleEvents = expanded
+    ? events
+    : events.slice(0, PREVIEW_EVENT_COUNT);
   const statusLabel = getTrackingStatusLabel(tracking.status, intl);
   const statusTone = getTrackingStatusTone(tracking.status);
   const durationLabel = formatDuration(metrics.durationMs, intl);
+  const officialTrackingLink = getOfficialTrackingLink(tracking);
+  const alternativeTrackingLink = getAlternativeTrackingLink(
+    tracking.trackingNumber,
+  );
   const providerName =
     tracking.provider?.name ||
     tracking.provider?.alias ||
@@ -142,19 +166,41 @@ const TrackingItem = ({
         <div className={styles.trackingIdentity}>
           <div className={styles.trackingNumberRow}>
             <Text fontWeight="bold">{tracking.trackingNumber}</Text>
-            <a
-              className={styles.externalLink}
-              href={getTrackingLink(tracking.trackingNumber)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink size={14} />
-              <FormattedMessage id="DillEz" defaultMessage="Open in 17TRACK" />
-            </a>
+            <div className={styles.trackingLinks}>
+              {officialTrackingLink && (
+                <a
+                  className={styles.externalLink}
+                  href={officialTrackingLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink size={14} />
+                  <FormattedMessage
+                    id="OUVUGL"
+                    defaultMessage="Official {carrier}"
+                    values={{ carrier: officialTrackingLink.label }}
+                  />
+                </a>
+              )}
+              <a
+                className={styles.externalLink}
+                href={alternativeTrackingLink.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink size={14} />
+                <FormattedMessage
+                  id="qusBTQ"
+                  defaultMessage="Alternative tracker"
+                />
+              </a>
+            </div>
           </div>
           <Text size={2} color="default2">
             {providerName}
-            {tracking.provider?.country ? ` · ${tracking.provider.country}` : ""}
+            {tracking.provider?.country
+              ? ` · ${tracking.provider.country}`
+              : ""}
           </Text>
         </div>
         <div className={styles.status}>
@@ -186,7 +232,11 @@ const TrackingItem = ({
           </Text>
           <Text
             fontWeight="bold"
-            title={metrics.latestEventAt ? formatDateTime(metrics.latestEventAt, intl) : undefined}
+            title={
+              metrics.latestEventAt
+                ? formatDateTime(metrics.latestEventAt, intl)
+                : undefined
+            }
           >
             {formatRelativeTime(metrics.latestEventAt, intl)}
           </Text>
@@ -195,7 +245,9 @@ const TrackingItem = ({
           <Text size={2} color="default2">
             <FormattedMessage id="GBPMMf" defaultMessage="Last checked" />
           </Text>
-          <Text fontWeight="bold">{formatDateTime(new Date(tracking.checkedAt), intl)}</Text>
+          <Text fontWeight="bold">
+            {formatDateTime(new Date(tracking.checkedAt), intl)}
+          </Text>
         </div>
       </div>
 
@@ -252,7 +304,10 @@ const TrackingItem = ({
                   <div className={styles.eventDetails}>
                     <Text fontWeight={index === 0 ? "bold" : "regular"}>
                       {event.description || (
-                        <FormattedMessage id="ruRGzt" defaultMessage="Carrier update" />
+                        <FormattedMessage
+                          id="ruRGzt"
+                          defaultMessage="Carrier update"
+                        />
                       )}
                     </Text>
                     {!!location && (
@@ -262,7 +317,9 @@ const TrackingItem = ({
                     )}
                     {(event.stage || event.subStatus) && (
                       <Text size={1} color="default2">
-                        {[event.stage, event.subStatus].filter(Boolean).join(" · ")}
+                        {[event.stage, event.subStatus]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </Text>
                     )}
                   </div>
@@ -271,10 +328,17 @@ const TrackingItem = ({
             })}
           </div>
           {events.length > PREVIEW_EVENT_COUNT && (
-            <Button variant="secondary" onClick={onToggle} className={styles.expandButton}>
+            <Button
+              variant="secondary"
+              onClick={onToggle}
+              className={styles.expandButton}
+            >
               {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
               {expanded ? (
-                <FormattedMessage id="lWY4Sr" defaultMessage="Show recent events" />
+                <FormattedMessage
+                  id="lWY4Sr"
+                  defaultMessage="Show recent events"
+                />
               ) : (
                 <FormattedMessage
                   id="5wLT96"
@@ -301,13 +365,15 @@ const TrackingItem = ({
   );
 };
 
-export const OrderTrackingTimeline = ({ orderId }: OrderTrackingTimelineProps): JSX.Element => {
+export const OrderTrackingTimeline = ({
+  orderId,
+}: OrderTrackingTimelineProps): JSX.Element => {
   const [data, setData] = useState<OrderTrackingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [expandedTrackingNumbers, setExpandedTrackingNumbers] = useState<Set<string>>(
-    () => new Set(),
-  );
+  const [expandedTrackingNumbers, setExpandedTrackingNumbers] = useState<
+    Set<string>
+  >(() => new Set());
 
   const loadTracking = useCallback(
     async (signal?: AbortSignal): Promise<void> => {
@@ -351,11 +417,12 @@ export const OrderTrackingTimeline = ({ orderId }: OrderTrackingTimelineProps): 
   );
 
   const tracking = useMemo(
-    () => data?.orders.find(order => order.orderId === orderId)?.tracking ?? [],
+    () =>
+      data?.orders.find((order) => order.orderId === orderId)?.tracking ?? [],
     [data, orderId],
   );
   const toggleExpanded = useCallback((trackingNumber: string): void => {
-    setExpandedTrackingNumbers(current => {
+    setExpandedTrackingNumbers((current) => {
       const next = new Set(current);
 
       if (next.has(trackingNumber)) {
@@ -403,7 +470,10 @@ export const OrderTrackingTimeline = ({ orderId }: OrderTrackingTimelineProps): 
         ) : hasError ? (
           <div className={styles.error}>
             <Text color="critical1">
-              <FormattedMessage id="3xiwF5" defaultMessage="Could not load shipment tracking" />
+              <FormattedMessage
+                id="3xiwF5"
+                defaultMessage="Could not load shipment tracking"
+              />
             </Text>
             <Button variant="secondary" onClick={() => void loadTracking()}>
               <FormattedMessage id="FazwRl" defaultMessage="Try again" />
@@ -428,7 +498,7 @@ export const OrderTrackingTimeline = ({ orderId }: OrderTrackingTimelineProps): 
                 </Text>
               </div>
             )}
-            {tracking.map(item => (
+            {tracking.map((item) => (
               <TrackingItem
                 key={item.trackingNumber}
                 tracking={item}

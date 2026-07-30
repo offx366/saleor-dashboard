@@ -100,6 +100,7 @@
     "chroma-js": "^2.6.0",
     "clsx": "^1.2.1",
     "color-convert": "^2.0.1",
+    "country-flag-icons": "1.6.20",
     "currency-codes": "^2.2.0",
     "currency.js": "^2.0.4",
     "debug": "^4.4.3",

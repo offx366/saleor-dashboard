@@ -16,7 +16,12 @@ import { type Option } from "@saleor/macaw-ui-next";
 
 import { type DropdownCell, type DropdownCellProps } from "./DropdownCell";
 import { type MoneyCell, type MoneyDiscuntedCell } from "./Money";
-import { hueToPillColorLight, type PillCell, type PillColor, stringToHue } from "./PillCell";
+import {
+  hueToPillColorLight,
+  type PillCell,
+  type PillColor,
+  stringToHue,
+} from "./PillCell";
 import { type StatusCell } from "./StatusCell";
 import { type ThumbnailCell } from "./ThumbnailCell";
 
@@ -81,7 +86,10 @@ interface ChevronCellData {
 
 export type ChevronCell = CustomCell<ChevronCellData>;
 
-export function chevronCell(expanded: boolean, hasCursorPointer = true): ChevronCell {
+export function chevronCell(
+  expanded: boolean,
+  hasCursorPointer = true,
+): ChevronCell {
   return {
     cursor: hasCursorPointer ? "pointer" : "default",
     allowOverlay: false,
@@ -113,7 +121,10 @@ export function tagsCell(
   };
 }
 
-export function booleanCell(value: boolean, options: Partial<GridCell> = {}): GridCell {
+export function booleanCell(
+  value: boolean,
+  options: Partial<GridCell> = {},
+): GridCell {
   return {
     ...common,
     ...options,
@@ -200,7 +211,13 @@ interface MoneyDiscountedCellData {
 }
 
 export function moneyDiscountedCell(
-  { value, undiscounted, currency, locale, hasBreakdown }: MoneyDiscountedCellData,
+  {
+    value,
+    undiscounted,
+    currency,
+    locale,
+    hasBreakdown,
+  }: MoneyDiscountedCellData,
   opts?: Partial<GridCell>,
 ): MoneyDiscuntedCell {
   return {
@@ -221,7 +238,10 @@ export function moneyDiscountedCell(
 
 export function dropdownCell(
   value: Option,
-  dataOpts: Pick<DropdownCellProps, "allowCustomValues" | "emptyOption" | "swatch"> &
+  dataOpts: Pick<
+    DropdownCellProps,
+    "allowCustomValues" | "emptyOption" | "swatch"
+  > &
     ({ choices: Option[] } | { update: (text: string) => Promise<Option[]> }),
   opts?: Partial<GridCell>,
 ): DropdownCell {
@@ -242,6 +262,7 @@ export function thumbnailCell(
   name: string,
   image: string,
   opts?: Partial<GridCell>,
+  dataOpts?: Pick<ThumbnailCell["data"], "imageAspectRatio">,
 ): ThumbnailCell {
   return {
     ...common,
@@ -252,11 +273,16 @@ export function thumbnailCell(
       kind: "thumbnail-cell",
       image,
       name,
+      ...dataOpts,
     },
   };
 }
 
-export function statusCell(status: DotStatus, value: string, opts?: Partial<GridCell>): StatusCell {
+export function statusCell(
+  status: DotStatus,
+  value: string,
+  opts?: Partial<GridCell>,
+): StatusCell {
   return {
     ...common,
     ...opts,

@@ -6,6 +6,7 @@ import {
   readonlyTextCell,
   statusCell,
   textCell,
+  thumbnailCell,
 } from "@dashboard/components/Datagrid/customCells/cells";
 import { type GetCellContentOpts } from "@dashboard/components/Datagrid/Datagrid";
 import { type AvailableColumn } from "@dashboard/components/Datagrid/types";
@@ -19,10 +20,15 @@ import {
 import { type OrderListUrlSortField } from "@dashboard/orders/urls";
 import { type RelayToFlat, type Sort } from "@dashboard/types";
 import { getColumnSortDirectionIcon } from "@dashboard/utils/columns/getColumnSortDirectionIcon";
-import { type GridCell, type Item, type TextCell } from "@glideapps/glide-data-grid";
+import {
+  type GridCell,
+  type Item,
+  type TextCell,
+} from "@glideapps/glide-data-grid";
 import { type DefaultTheme, useTheme } from "@saleor/macaw-ui-next";
 import { type IntlShape, useIntl } from "react-intl";
 
+import { getCountryFlagDataUri } from "./countryFlag";
 import { columnsMessages } from "./messages";
 import { getOrderTrackingCellState } from "./tracking";
 import { type OrderTrackingSummary } from "./useOrderTrackingSummaries";
@@ -86,7 +92,7 @@ export const orderListStaticColumnAdapter = (
       title: intl.formatMessage(columnsMessages.channel),
       width: 200,
     },
-  ].map(column => ({
+  ].map((column) => ({
     ...column,
     icon: getColumnSortDirectionIcon(sort, column.id),
   }));
@@ -101,7 +107,7 @@ interface GetCellContentProps {
 }
 
 function getDatagridRowDataIndex(row, removeArray) {
-  return row + removeArray.filter(r => r <= row).length;
+  return row + removeArray.filter((r) => r <= row).length;
 }
 
 export const useGetCellContent = ({
@@ -115,9 +121,14 @@ export const useGetCellContent = ({
   const intl = useIntl();
   const { theme } = useTheme();
 
-  return ([column, row]: Item, { added, removed }: GetCellContentOpts): GridCell => {
+  return (
+    [column, row]: Item,
+    { added, removed }: GetCellContentOpts,
+  ): GridCell => {
     const columnId = columns[column]?.id;
-    const rowData = added.includes(row) ? undefined : orders[getDatagridRowDataIndex(row, removed)];
+    const rowData = added.includes(row)
+      ? undefined
+      : orders[getDatagridRowDataIndex(row, removed)];
 
     if (!columnId || !rowData) {
       return readonlyTextCell("");
@@ -159,7 +170,9 @@ export const useGetCellContent = ({
 
 const COMMON_CELL_PROPS: Partial<GridCell> = { cursor: "pointer" };
 
-function getDateCellContent(rowData: RelayToFlat<OrderListQuery["orders"]>[number]) {
+function getDateCellContent(
+  rowData: RelayToFlat<OrderListQuery["orders"]>[number],
+) {
   return dateCell(rowData?.created, COMMON_CELL_PROPS);
 }
 
@@ -221,30 +234,23 @@ export function getTrackingCellContent(
   return readonlyTextCell(state.label);
 }
 
-const getCountryFlag = (countryCode: string): string => {
-  const normalizedCode = countryCode.trim().toUpperCase();
-
-  if (!/^[A-Z]{2}$/.test(normalizedCode)) {
-    return "";
-  }
-
-  return [...normalizedCode]
-    .map(character => String.fromCodePoint(127397 + character.charCodeAt(0)))
-    .join("");
-};
-
 export function getCountryCellContent(
   rowData: RelayToFlat<OrderListQuery["orders"]>[number],
-): TextCell {
-  const country = rowData?.shippingAddress?.country || rowData?.billingAddress?.country;
+): GridCell {
+  const country =
+    rowData?.shippingAddress?.country || rowData?.billingAddress?.country;
 
   if (!country?.country) {
     return readonlyTextCell("-");
   }
 
-  const flag = getCountryFlag(country.code);
+  const flag = getCountryFlagDataUri(country.code);
 
-  return readonlyTextCell(flag ? `${flag} ${country.country}` : country.country);
+  return flag
+    ? thumbnailCell(country.country, flag, COMMON_CELL_PROPS, {
+        imageAspectRatio: 3 / 2,
+      })
+    : readonlyTextCell(country.country);
 }
 
 const higherPriorityChargeStatuses = [OrderChargeStatusEnum.OVERCHARGED];
@@ -255,7 +261,10 @@ export function getPaymentCellContent(
   rowData: RelayToFlat<OrderListQuery["orders"]>[number],
 ) {
   if (higherPriorityChargeStatuses.includes(rowData.chargeStatus)) {
-    const { localized, status } = transformChargedStatus(rowData.chargeStatus, intl);
+    const { localized, status } = transformChargedStatus(
+      rowData.chargeStatus,
+      intl,
+    );
 
     const color = getStatusColor({
       status,
@@ -279,23 +288,37 @@ export function getPaymentCellContent(
   return readonlyTextCell("-");
 }
 
-function getNetCellContent(rowData: RelayToFlat<OrderListQuery["orders"]>[number]) {
+function getNetCellContent(
+  rowData: RelayToFlat<OrderListQuery["orders"]>[number],
+) {
   if (rowData?.subtotal?.net) {
-    return moneyCell(rowData.subtotal.net.amount, rowData.subtotal.net.currency, COMMON_CELL_PROPS);
+    return moneyCell(
+      rowData.subtotal.net.amount,
+      rowData.subtotal.net.currency,
+      COMMON_CELL_PROPS,
+    );
   }
 
   return readonlyTextCell("-");
 }
 
-function getTotalCellContent(rowData: RelayToFlat<OrderListQuery["orders"]>[number]) {
+function getTotalCellContent(
+  rowData: RelayToFlat<OrderListQuery["orders"]>[number],
+) {
   if (rowData?.total?.gross) {
-    return moneyCell(rowData.total.gross.amount, rowData.total.gross.currency, COMMON_CELL_PROPS);
+    return moneyCell(
+      rowData.total.gross.amount,
+      rowData.total.gross.currency,
+      COMMON_CELL_PROPS,
+    );
   }
 
   return readonlyTextCell("-");
 }
 
-function getChannelCellContent(rowData: RelayToFlat<OrderListQuery["orders"]>[number]): TextCell {
+function getChannelCellContent(
+  rowData: RelayToFlat<OrderListQuery["orders"]>[number],
+): TextCell {
   if (rowData?.channel?.name) {
     return readonlyTextCell(rowData.channel.name);
   }

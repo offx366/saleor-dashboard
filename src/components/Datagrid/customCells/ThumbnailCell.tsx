@@ -10,6 +10,7 @@ export interface ThumbnailCellProps {
   readonly kind: "thumbnail-cell";
   readonly image: string;
   readonly name: string;
+  readonly imageAspectRatio?: number;
   readonly muted?: boolean;
 }
 
@@ -21,12 +22,20 @@ export const thumbnailCellRenderer: CustomRenderer<ThumbnailCell> = {
     (cell.data as any).kind === "thumbnail-cell",
   draw: (args, cell) => {
     const { ctx, rect, theme, imageLoader, col, row } = args;
-    const { image, name } = cell.data;
+    const { image, imageAspectRatio, name } = cell.data;
     const xPad = 5;
-    const size = rect.height - xPad * 2;
+    const maxImageSize = rect.height - xPad * 2;
+    const imageHeight = imageAspectRatio
+      ? Math.min(maxImageSize, 24)
+      : maxImageSize;
+    const imageWidth = imageAspectRatio
+      ? imageHeight * imageAspectRatio
+      : maxImageSize;
     const drawX = rect.x + xPad;
-    const drawY = rect.y + xPad;
-    const imageResult = image ? imageLoader.loadOrGetImage(image, col, row) : undefined;
+    const drawY = rect.y + (rect.height - imageHeight) / 2;
+    const imageResult = image
+      ? imageLoader.loadOrGetImage(image, col, row)
+      : undefined;
 
     if (cell.data.muted) {
       ctx.globalAlpha = 0.55;
@@ -35,14 +44,14 @@ export const thumbnailCellRenderer: CustomRenderer<ThumbnailCell> = {
     ctx.save();
 
     if (imageResult !== undefined && image) {
-      roundedImage(ctx, drawX, drawY, size, size, 4);
+      roundedImage(ctx, drawX, drawY, imageWidth, imageHeight, 4);
       ctx.strokeStyle = theme.borderColor;
       ctx.stroke();
       ctx.clip();
-      ctx.drawImage(imageResult, drawX, drawY, size, size);
+      ctx.drawImage(imageResult, drawX, drawY, imageWidth, imageHeight);
     } else {
       ctx.beginPath();
-      roundedImage(ctx, drawX, drawY, size, size, 4);
+      roundedImage(ctx, drawX, drawY, imageWidth, imageHeight, 4);
       ctx.fillStyle = theme.borderColor;
       ctx.fill();
     }
@@ -53,7 +62,7 @@ export const thumbnailCellRenderer: CustomRenderer<ThumbnailCell> = {
       ctx.fillStyle = theme.textDark;
       ctx.fillText(
         name,
-        drawX + size + 10,
+        drawX + imageWidth + 10,
         rect.y + rect.height / 2 + getMiddleCenterBias(ctx, theme),
       );
     }
@@ -64,7 +73,7 @@ export const thumbnailCellRenderer: CustomRenderer<ThumbnailCell> = {
   },
 
   provideEditor: () => ({
-    editor: p => {
+    editor: (p) => {
       const { isHighlighted, onChange, value } = p;
 
       return (
@@ -73,7 +82,7 @@ export const thumbnailCellRenderer: CustomRenderer<ThumbnailCell> = {
           autoFocus={true}
           readOnly={value.readonly}
           value={value.data.name ?? ""}
-          onChange={e =>
+          onChange={(e) =>
             onChange({
               ...value,
               data: {
@@ -86,7 +95,7 @@ export const thumbnailCellRenderer: CustomRenderer<ThumbnailCell> = {
       );
     },
     disablePadding: true,
-    deletedValue: cell => ({
+    deletedValue: (cell) => ({
       ...cell,
       copyData: "",
       data: {
