@@ -1270,6 +1270,9 @@
     "context": "order status",
     "string": "Returned"
   },
+  "4DdW7k": {
+    "string": "No conversations for this email"
+  },
   "4ELCCk": {
     "context": "column picker section default header",
     "string": "Categories"
@@ -6929,9 +6932,6 @@
     "context": "channel name",
     "string": "Channel name"
   },
-  "UzTci+": {
-    "string": "No Chatwoot conversations for this email"
-  },
   "V+fkAO": {
     "context": "number of products in category",
     "string": "Products"
@@ -7907,6 +7907,9 @@
   "ZaDvwq": {
     "context": "helper text shown in line discount modal when automatic discount is applied",
     "string": "This line is already discounted by {source}."
+  },
+  "Zay6OH": {
+    "string": "No subject"
   },
   "ZayvsI": {
     "context": "metric unit system",

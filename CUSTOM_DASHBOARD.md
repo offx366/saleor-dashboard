@@ -61,10 +61,11 @@ Then open `http://localhost:19001/`.
 ## Customer conversations integration
 
 The order details sidebar loads public incoming and outgoing messages for the
-order email from the GlobalHealingWeb Chatwoot inbox. The browser never receives
-the Chatwoot API token. It calls the existing GlobalHealingWeb bot endpoint,
+order email from the GlobalHealingWeb Chatwoot inbox and matching messages from
+the business iCloud mailbox. The browser never receives the Chatwoot API token
+or the iCloud credential. It calls the existing GlobalHealingWeb bot endpoint,
 which validates the active Saleor staff token and requires `MANAGE_ORDERS`
-before querying Chatwoot.
+before querying either source.
 
 Dashboard component:
 
@@ -78,10 +79,16 @@ Server-side proxy:
 /home/saleor/saleor-platform/chatwood/globalhealingweb_bot/server.mjs
 ```
 
-Brevo is currently the SMTP transport used by Chatwoot. It is not configured as
-an inbound email inbox, so the card shows conversations recorded by Chatwoot.
-If an email inbox is added later, include its inbox ID in
-`DASHBOARD_CHATWOOT_INBOX_IDS`.
+Inbound mail for `info@globalhealingweb.com` and
+`support@globalhealingweb.com` is routed to iCloud. The proxy performs
+read-only IMAP searches for the exact order email and filters inbound messages
+to those business recipients. It does not import or modify the rest of the
+mailbox. The app-specific password is mounted from
+`/home/saleor/.secrets/ghw_icloud_app_password` as a Docker secret and must
+never be committed to Git.
+
+Brevo remains the SMTP transport for outgoing transactional mail; its delivery
+events are not treated as customer-authored messages.
 
 ## Updating from Saleor
 

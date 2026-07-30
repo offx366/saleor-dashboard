@@ -19,7 +19,7 @@ interface ConversationAttachment {
 }
 
 interface ConversationMessage {
-  id: number;
+  id: number | string;
   content: string;
   messageType: number | "incoming" | "outgoing";
   contentType: string;
@@ -29,7 +29,9 @@ interface ConversationMessage {
 }
 
 interface CustomerConversation {
-  id: number;
+  id: number | string;
+  source: "chatwoot" | "email";
+  subject: string;
   status: string;
   inboxId: number;
   createdAt: number;
@@ -197,10 +199,7 @@ export const OrderCustomerConversations = ({
           </div>
         ) : !data?.conversations.length ? (
           <Placeholder>
-            <FormattedMessage
-              id="UzTci+"
-              defaultMessage="No Chatwoot conversations for this email"
-            />
+            <FormattedMessage id="4DdW7k" defaultMessage="No conversations for this email" />
           </Placeholder>
         ) : (
           <div className={styles.scrollArea}>
@@ -209,26 +208,41 @@ export const OrderCustomerConversations = ({
                 <div className={styles.conversationHeader}>
                   <div className={styles.conversationMeta}>
                     <Text fontWeight="bold">
-                      <FormattedMessage
-                        id="NlPrGG"
-                        defaultMessage="Conversation #{number}"
-                        values={{ number: conversation.id }}
-                      />
+                      {conversation.source === "email" ? (
+                        <>
+                          <FormattedMessage id="sy+pv5" defaultMessage="Email" />:{" "}
+                          {conversation.subject || (
+                            <FormattedMessage id="Zay6OH" defaultMessage="No subject" />
+                          )}
+                        </>
+                      ) : (
+                        <FormattedMessage
+                          id="NlPrGG"
+                          defaultMessage="Conversation #{number}"
+                          values={{ number: conversation.id }}
+                        />
+                      )}
                     </Text>
                     <Text size={2} color="default2">
-                      {formatStatus(conversation.status)} ·{" "}
-                      {formatTimestamp(conversation.lastActivityAt)}
+                      {conversation.source === "email" ? (
+                        <FormattedMessage id="sy+pv5" defaultMessage="Email" />
+                      ) : (
+                        formatStatus(conversation.status)
+                      )}{" "}
+                      · {formatTimestamp(conversation.lastActivityAt)}
                     </Text>
                   </div>
-                  <a
-                    className={styles.conversationLink}
-                    href={conversation.chatwootUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink size={14} />
-                    <FormattedMessage id="JfG49w" defaultMessage="Open" />
-                  </a>
+                  {!!conversation.chatwootUrl && (
+                    <a
+                      className={styles.conversationLink}
+                      href={conversation.chatwootUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink size={14} />
+                      <FormattedMessage id="JfG49w" defaultMessage="Open" />
+                    </a>
+                  )}
                 </div>
                 {conversation.messages.length ? (
                   <div className={styles.messageList}>

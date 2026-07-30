@@ -34,6 +34,8 @@ const conversationsResponse = {
   conversations: [
     {
       id: 124,
+      source: "chatwoot",
+      subject: "",
       status: "open",
       inboxId: 1,
       createdAt: 1774520603,
@@ -60,6 +62,27 @@ const conversationsResponse = {
         },
       ],
     },
+    {
+      id: "email:petina-message-id",
+      source: "email",
+      subject: "Order 487 has been fully paid",
+      status: "email",
+      inboxId: 0,
+      createdAt: 1784901293,
+      lastActivityAt: 1784901293,
+      chatwootUrl: "",
+      messages: [
+        {
+          id: "email-message:petina-message-id",
+          content: "I received two different bags of herbs.",
+          messageType: "incoming",
+          contentType: "text",
+          createdAt: 1784901293,
+          senderName: "Julija Petina",
+          attachments: [],
+        },
+      ],
+    },
   ],
 };
 
@@ -68,7 +91,7 @@ describe("OrderCustomerConversations", () => {
     jest.clearAllMocks();
   });
 
-  it("loads and renders Chatwoot conversations for the order email", async () => {
+  it("loads and renders Chatwoot and email conversations for the order email", async () => {
     // Arrange
     mockAuthenticatedFetch.mockResolvedValue({
       ok: true,
@@ -85,6 +108,9 @@ describe("OrderCustomerConversations", () => {
     // Assert
     expect(await screen.findByText("Do you stock this product?")).toBeInTheDocument();
     expect(screen.getByText("Yes, it is available.")).toBeInTheDocument();
+    expect(screen.getByText("Email: Order 487 has been fully paid")).toBeInTheDocument();
+    expect(screen.getByText("I received two different bags of herbs.")).toBeInTheDocument();
+    expect(screen.getByText("Julija Petina", { exact: false })).toBeInTheDocument();
     expect(screen.getByText("Customer Name", { exact: false })).toBeInTheDocument();
     expect(screen.getByText("Support", { exact: false })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open" })).toHaveAttribute(
