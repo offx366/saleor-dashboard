@@ -102,7 +102,7 @@ export const OrderListDatagrid = ({
     },
     [rowAnchor, orders],
   );
-  const orderIds = useMemo(() => orders.map(order => order.id), [orders]);
+  const orderIds = useMemo(() => orders?.map(order => order.id) ?? [], [orders]);
   const trackingEnabled = visibleColumns.some(column => column.id === "tracking");
   const tracking = useOrderTrackingSummaries(orderIds, trackingEnabled);
   const getCellContent = useGetCellContent({
