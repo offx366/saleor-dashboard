@@ -38,7 +38,7 @@ const formatDateTime = (date: Date, intl: IntlShape): string =>
 const formatDuration = (durationMs: number | undefined, intl: IntlShape): string => {
   if (durationMs === undefined) {
     return intl.formatMessage({
-      id: 'Ph58Wf',
+      id: "Ph58Wf",
       defaultMessage: "Waiting for carrier scans",
     });
   }
@@ -48,7 +48,7 @@ const formatDuration = (durationMs: number | undefined, intl: IntlShape): string
   if (days === 0) {
     return intl.formatMessage(
       {
-        id: 'Giy64i',
+        id: "Giy64i",
         defaultMessage: "{hours, plural, one {# hour} other {# hours}}",
       },
       { hours },
@@ -57,7 +57,7 @@ const formatDuration = (durationMs: number | undefined, intl: IntlShape): string
 
   return intl.formatMessage(
     {
-      id: 'qw+hky',
+      id: "qw+hky",
       defaultMessage:
         "{days, plural, one {# day} other {# days}} {hours, plural, =0 {} one {# hour} other {# hours}}",
     },
@@ -68,7 +68,7 @@ const formatDuration = (durationMs: number | undefined, intl: IntlShape): string
 const formatRelativeTime = (date: Date | undefined, intl: IntlShape): string => {
   if (!date) {
     return intl.formatMessage({
-      id: 'xRwqzV',
+      id: "xRwqzV",
       defaultMessage: "No carrier update yet",
     });
   }
@@ -132,7 +132,7 @@ const TrackingItem = ({
     tracking.provider?.name ||
     tracking.provider?.alias ||
     intl.formatMessage({
-      id: 'Z1RDyy',
+      id: "Z1RDyy",
       defaultMessage: "Carrier not identified",
     });
 
@@ -227,9 +227,27 @@ const TrackingItem = ({
                     <span />
                   </div>
                   <div className={styles.eventTime}>
-                    <Text size={2} color="default2">
-                      {eventDate ? formatDateTime(eventDate, intl) : "—"}
-                    </Text>
+                    {eventDate ? (
+                      <>
+                        <Text size={2} color="default2">
+                          {intl.formatDate(eventDate, {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </Text>
+                        <Text size={2} color="default2">
+                          {intl.formatTime(eventDate, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text size={2} color="default2">
+                        —
+                      </Text>
+                    )}
                   </div>
                   <div className={styles.eventDetails}>
                     <Text fontWeight={index === 0 ? "bold" : "regular"}>
