@@ -62,7 +62,9 @@ export const OrderListDatagrid = ({
     [emptyColumn, intl, sort],
   );
   const { handlers, staticColumns, visibleColumns, selectedColumns } = useColumns({
-    gridName: "order_list",
+    // Version the persisted layout so staff accounts created before the
+    // tracking column do not keep hiding it through legacy grid metadata.
+    gridName: "order_list_tracking_v1",
     staticColumns: memoizedStaticColumns,
     selectedColumns: settings?.columns ?? [],
     mapColumnsOnSave: orderOrderListColumns,

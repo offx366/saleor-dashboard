@@ -130,15 +130,15 @@ describe("OrderListDatagrid utils", () => {
       expect(result).toEqual(columns);
     });
 
-    it("places tracking immediately after fulfillment status", () => {
+    it("places tracking immediately after customer so it is visible without scrolling", () => {
       // Arrange
-      const columns = ["tracking", "number", "date", "status", "net", "total"];
+      const columns = ["tracking", "number", "date", "customer", "status", "net", "total"];
 
       // Act
       const result = orderOrderListColumns(columns);
 
       // Assert
-      expect(result).toEqual(["number", "date", "status", "tracking", "net", "total"]);
+      expect(result).toEqual(["number", "date", "customer", "tracking", "status", "net", "total"]);
     });
   });
 
@@ -153,13 +153,27 @@ describe("OrderListDatagrid utils", () => {
       expect(columns).toEqual(defaultOrderListColumnsWithTracking);
     });
 
-    it("does not change a customized column list", () => {
+    it("adds tracking to a customized column list", () => {
       // Arrange
       const customColumns = ["number", "customer", "total"];
 
       // Act & Assert
-      expect(shouldMigrateOrderListColumns(customColumns)).toBe(false);
-      expect(getOrderListColumns(customColumns)).toBe(customColumns);
+      expect(shouldMigrateOrderListColumns(customColumns)).toBe(true);
+      expect(getOrderListColumns(customColumns)).toEqual([
+        "number",
+        "customer",
+        "tracking",
+        "total",
+      ]);
+    });
+
+    it("does not change columns after tracking has been added", () => {
+      // Arrange
+      const columnsWithTracking = ["number", "customer", "tracking", "total"];
+
+      // Act & Assert
+      expect(shouldMigrateOrderListColumns(columnsWithTracking)).toBe(false);
+      expect(getOrderListColumns(columnsWithTracking)).toBe(columnsWithTracking);
     });
   });
 });
