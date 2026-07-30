@@ -1,0 +1,11 @@
+ARG PREVIOUS_IMAGE
+ARG CURRENT_IMAGE
+
+FROM ${PREVIOUS_IMAGE} AS previous
+FROM ${CURRENT_IMAGE} AS current
+
+FROM previous AS merged
+COPY --from=current /app/dashboard/ /app/dashboard/
+
+FROM current
+COPY --from=merged /app/dashboard/ /app/dashboard/

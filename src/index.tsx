@@ -53,9 +53,12 @@ import { useLocationState } from "./hooks/useLocationState";
 import { commonMessages } from "./intl";
 import { NotFound } from "./NotFound";
 import { errorTracker } from "./services/errorTracking";
+import { installStaleChunkRecovery } from "./services/staleChunkRecovery";
 import { paletteOverrides, themeOverrides } from "./themeOverrides";
 import { warehouseSection } from "./warehouses/urls";
 import { OnboardingProvider } from "./welcomePage/WelcomePageOnboarding/onboardingContext";
+
+installStaleChunkRecovery();
 
 // Lazy-loaded page sections for code splitting
 const AttributeSection = lazy(() => import("./attributes"));

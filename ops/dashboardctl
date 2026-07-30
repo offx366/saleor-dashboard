@@ -151,10 +151,13 @@ build_image() {
   require_clean_tree
 
   local image
+  local raw_image
   local full_sha
+  local previous_image
   local version
 
   image="$(head_image)"
+  raw_image="${image}-raw"
   full_sha="$(git_sha)"
   version="$(project_version)-custom-$(short_git_sha)"
 
@@ -164,12 +167,30 @@ build_image() {
     return 0
   fi
 
-  log "Building $image"
+  log "Building $raw_image"
   docker build \
     --build-arg "COMMIT_ID=$full_sha" \
     --build-arg "PROJECT_VERSION=$version" \
-    --tag "$image" \
+    --tag "$raw_image" \
     "$ROOT_DIR"
+
+  previous_image="$(
+    docker inspect saleor-platform-dashboard-1 --format '{{.Config.Image}}' 2>/dev/null \
+      || true
+  )"
+
+  if [[ -n "$previous_image" ]] \
+    && docker image inspect "$previous_image" >/dev/null 2>&1; then
+    log "Keeping previous release assets from $previous_image"
+    docker build \
+      --file "$ROOT_DIR/ops/Dockerfile.asset-compat" \
+      --build-arg "CURRENT_IMAGE=$raw_image" \
+      --build-arg "PREVIOUS_IMAGE=$previous_image" \
+      --tag "$image" \
+      "$ROOT_DIR"
+  else
+    docker tag "$raw_image" "$image"
+  fi
 
   docker image inspect "$image" >/dev/null
   log "Built $image"
