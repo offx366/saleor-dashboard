@@ -4987,11 +4987,6 @@ export enum OrderAction {
   VOID = 'VOID'
 }
 
-export type OrderAddNoteInput = {
-  /** Note message. */
-  message: Scalars['String']['input'];
-};
-
 /**
  * Determine a current authorize status for order.
  *
