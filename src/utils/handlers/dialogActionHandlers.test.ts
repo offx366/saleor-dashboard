@@ -46,4 +46,35 @@ describe("createDialogActionHandlers", () => {
       { replace: true },
     );
   });
+
+  it("clears warehouse picker params without clearing line focus", () => {
+    // Arrange
+    const navigate = jest.fn();
+    const params = {
+      lineId: "focused-line",
+      warehouseLineId: "warehouse-line",
+      warehouseId: "warehouse-1",
+      action: "change-warehouse",
+    };
+    const [, closeModal] = createDialogActionHandlers(navigate, buildUrl, params, [
+      "warehouseLineId",
+      "warehouseId",
+    ]);
+
+    // Act
+    closeModal();
+
+    // Assert
+    expect(navigate).toHaveBeenCalledWith(
+      buildUrl({
+        lineId: "focused-line",
+        warehouseLineId: undefined,
+        warehouseId: undefined,
+        action: undefined,
+        id: undefined,
+        ids: undefined,
+      }),
+      { replace: true },
+    );
+  });
 });
