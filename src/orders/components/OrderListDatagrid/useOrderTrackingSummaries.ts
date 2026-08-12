@@ -3,7 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ORDER_TRACKING_ENDPOINT = "https://api.ruslibrary.com/tracking/api/order-tracking-summary";
 
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+// The keyless official carrier endpoints are deliberately rate-limited. A
+// one-minute refresh lets the backend advance its small legal refresh queue
+// without making the browser issue repeated manual requests.
+const REFRESH_INTERVAL_MS = 60 * 1000;
 const authenticatedFetch = createFetch({ refreshOnUnauthorized: false });
 
 export interface TrackingProvider {
