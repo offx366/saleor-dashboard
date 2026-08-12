@@ -57,6 +57,10 @@ const getStatusPriority = (status: TrackingSummary): number => {
     return 5;
   }
 
+  if (normalized.startsWith("providerunavailable")) {
+    return 5;
+  }
+
   if (normalized.startsWith("delivered")) {
     return 7;
   }
@@ -115,6 +119,10 @@ export const getTrackingStatusLabel = (status: string, intl: IntlShape): string 
 
   if (normalized.startsWith("notfound")) {
     return intl.formatMessage(trackingMessages.notFound);
+  }
+
+  if (normalized.startsWith("providerunavailable")) {
+    return intl.formatMessage(trackingMessages.unavailable);
   }
 
   if (normalized.length === 0 || normalized === "unknown") {
