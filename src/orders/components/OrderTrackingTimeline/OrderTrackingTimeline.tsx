@@ -24,6 +24,7 @@ import {
 import { getDurationParts, getTrackingMetrics } from "./trackingMetrics";
 
 const PREVIEW_EVENT_COUNT = 5;
+const REFRESH_INTERVAL_MS = 60 * 1000;
 
 interface OrderTrackingTimelineProps {
   orderId: string;
@@ -384,7 +385,7 @@ export const OrderTrackingTimeline = ({
   >(() => new Set());
 
   const loadTracking = useCallback(
-    async (signal?: AbortSignal): Promise<void> => {
+    async (signal?: AbortSignal, forceRefresh = false): Promise<void> => {
       setLoading(true);
       setHasError(false);
 
@@ -392,6 +393,7 @@ export const OrderTrackingTimeline = ({
         const result = await fetchOrderTrackingSummaries({
           orderIds: [orderId],
           includeDetails: true,
+          forceRefresh,
           signal,
         });
 
@@ -417,8 +419,13 @@ export const OrderTrackingTimeline = ({
 
       void loadTracking(controller.signal);
 
+      const interval = window.setInterval(() => {
+        void loadTracking(controller.signal);
+      }, REFRESH_INTERVAL_MS);
+
       return function abortOrderTrackingTimeline(): void {
         controller.abort();
+        window.clearInterval(interval);
       };
     },
     [loadTracking],
@@ -460,7 +467,7 @@ export const OrderTrackingTimeline = ({
         <DashboardCard.Toolbar>
           <Button
             variant="secondary"
-            onClick={() => void loadTracking()}
+            onClick={() => void loadTracking(undefined, true)}
             disabled={loading}
             data-test-id="refresh-order-tracking"
           >

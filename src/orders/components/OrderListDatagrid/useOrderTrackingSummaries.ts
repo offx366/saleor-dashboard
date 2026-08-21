@@ -59,12 +59,14 @@ interface UseOrderTrackingSummariesResult {
 interface FetchOrderTrackingSummariesOptions {
   orderIds: string[];
   includeDetails?: boolean;
+  forceRefresh?: boolean;
   signal?: AbortSignal;
 }
 
 export const fetchOrderTrackingSummaries = async ({
   orderIds,
   includeDetails = false,
+  forceRefresh = false,
   signal,
 }: FetchOrderTrackingSummariesOptions): Promise<OrderTrackingResponse> => {
   const response = await authenticatedFetch(ORDER_TRACKING_ENDPOINT, {
@@ -72,7 +74,7 @@ export const fetchOrderTrackingSummaries = async ({
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ orderIds, includeDetails }),
+    body: JSON.stringify({ orderIds, includeDetails, forceRefresh }),
     signal,
   });
 
