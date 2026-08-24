@@ -15,6 +15,7 @@ import { testIntlInstance } from "@test/intl";
 import { renderHook } from "@testing-library/react";
 
 import {
+  getCommentsCellContent,
   getCountryCellContent,
   getCustomerCellContent,
   getPaymentCellContent,
@@ -135,6 +136,34 @@ describe("getCountryCellContent", () => {
         name: "United States",
       },
     });
+  });
+});
+
+describe("getCommentsCellContent", () => {
+  it("shows the latest internal order-history comment and keeps it copyable", () => {
+    const result = getCommentsCellContent({
+      events: [
+        {
+          type: "NOTE_ADDED",
+          message: "Older note",
+          date: "2026-08-20T12:00:00Z",
+        },
+        {
+          type: "NOTE_UPDATED",
+          message: "Latest internal note",
+          date: "2026-08-24T12:00:00Z",
+        },
+      ],
+    } as RowDataType);
+
+    expect(result.data).toBe("Latest internal note");
+    expect(result.displayData).toBe("Latest internal note");
+  });
+
+  it("shows a dash when the order has no comment", () => {
+    expect(getCommentsCellContent({ events: [] } as RowDataType).data).toBe(
+      "-",
+    );
   });
 });
 

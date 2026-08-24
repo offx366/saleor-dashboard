@@ -27,7 +27,10 @@ describe("OrderListDatagrid utils", () => {
 
       // Arrange & Act
       const rowLength = getOrdersRowsLength(
-        [{} as RelayToFlat<NonNullQuery>[number], {} as RelayToFlat<NonNullQuery>[number]],
+        [
+          {} as RelayToFlat<NonNullQuery>[number],
+          {} as RelayToFlat<NonNullQuery>[number],
+        ],
         false,
       );
 
@@ -70,7 +73,7 @@ describe("OrderListDatagrid utils", () => {
       OrderListUrlSortField.customer,
       OrderListUrlSortField.payment,
       OrderListUrlSortField.fulfillment,
-    ])(`should return true when sortable field %s`, sortField => {
+    ])(`should return true when sortable field %s`, (sortField) => {
       expect(canBeSorted(sortField)).toBe(true);
     });
     it("should return false when not sortable field", () => {
@@ -132,18 +135,42 @@ describe("OrderListDatagrid utils", () => {
 
     it("always places tracking at the far right", () => {
       // Arrange
-      const columns = ["tracking", "number", "date", "customer", "status", "net", "total"];
+      const columns = [
+        "tracking",
+        "number",
+        "date",
+        "customer",
+        "status",
+        "net",
+        "total",
+      ];
 
       // Act
       const result = orderOrderListColumns(columns);
 
       // Assert
-      expect(result).toEqual(["number", "date", "customer", "status", "net", "total", "tracking"]);
+      expect(result).toEqual([
+        "number",
+        "date",
+        "customer",
+        "status",
+        "net",
+        "total",
+        "tracking",
+      ]);
     });
 
     it("always places country immediately before tracking", () => {
       // Arrange
-      const columns = ["tracking", "number", "country", "date", "customer", "status", "total"];
+      const columns = [
+        "tracking",
+        "number",
+        "country",
+        "date",
+        "customer",
+        "status",
+        "total",
+      ];
 
       // Act
       const result = orderOrderListColumns(columns);
@@ -164,7 +191,9 @@ describe("OrderListDatagrid utils", () => {
   describe("country and tracking column migration", () => {
     it("adds country and tracking to the old default order columns", () => {
       // Arrange & Act
-      const shouldMigrate = shouldMigrateOrderListColumns(oldDefaultOrderListColumns);
+      const shouldMigrate = shouldMigrateOrderListColumns(
+        oldDefaultOrderListColumns,
+      );
       const columns = getOrderListColumns(oldDefaultOrderListColumns);
 
       // Assert
@@ -184,6 +213,7 @@ describe("OrderListDatagrid utils", () => {
         "total",
         "country",
         "tracking",
+        "comments",
       ]);
     });
 
@@ -199,14 +229,21 @@ describe("OrderListDatagrid utils", () => {
         "total",
         "country",
         "tracking",
+        "comments",
       ]);
     });
 
     it("does not migrate when both fixed columns already exist", () => {
-      const columns = ["number", "country", "tracking"];
+      const columns = ["number", "country", "tracking", "comments"];
 
       expect(shouldMigrateOrderListColumns(columns)).toBe(false);
       expect(getOrderListColumns(columns)).toEqual(columns);
+    });
+
+    it("places comments after tracking", () => {
+      expect(
+        orderOrderListColumns(["comments", "tracking", "number", "country"]),
+      ).toEqual(["number", "country", "tracking", "comments"]);
     });
   });
 });

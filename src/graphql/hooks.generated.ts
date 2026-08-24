@@ -13861,6 +13861,12 @@ export const OrderListDocument = gql`
           id
         }
         created
+        events {
+          date
+          id
+          message
+          type
+        }
         id
         number
         paymentStatus

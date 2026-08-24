@@ -11,7 +11,11 @@ import { DatagridPagination } from "@dashboard/components/TablePagination";
 import { type OrderListQuery } from "@dashboard/graphql";
 import { getPrevLocationState } from "@dashboard/hooks/useBackLinkWithState";
 import { type OrderListUrlSortField } from "@dashboard/orders/urls";
-import { type ListProps, type RelayToFlat, type SortPage } from "@dashboard/types";
+import {
+  type ListProps,
+  type RelayToFlat,
+  type SortPage,
+} from "@dashboard/types";
 import { type Item } from "@glideapps/glide-data-grid";
 import { Box } from "@saleor/macaw-ui-next";
 import { useCallback, useMemo } from "react";
@@ -28,7 +32,9 @@ import {
   orderOrderListColumns,
 } from "./utils";
 
-interface OrderListDatagridProps extends ListProps, SortPage<OrderListUrlSortField> {
+interface OrderListDatagridProps
+  extends ListProps,
+    SortPage<OrderListUrlSortField> {
   orders: RelayToFlat<OrderListQuery["orders"]>;
   onRowClick?: (id: string) => void;
   rowAnchor?: (id: string) => string;
@@ -51,7 +57,7 @@ export const OrderListDatagrid = ({
   const datagrid = useDatagridChangeState();
   const ordersLength = getOrdersRowsLength(orders, disabled);
   const handleColumnChange = useCallback(
-    picked => {
+    (picked) => {
       onUpdateListSettings("columns", picked.filter(Boolean));
     },
     [onUpdateListSettings],
@@ -61,18 +67,21 @@ export const OrderListDatagrid = ({
     () => orderListStaticColumnAdapter(emptyColumn, intl, sort),
     [emptyColumn, intl, sort],
   );
-  const { handlers, staticColumns, visibleColumns, selectedColumns } = useColumns({
-    // Version the persisted layout so staff accounts created before the
-    // tracking column do not keep hiding it through legacy grid metadata.
-    gridName: "order_list_country_tracking_v2",
-    staticColumns: memoizedStaticColumns,
-    selectedColumns: settings?.columns ?? [],
-    mapColumnsOnSave: orderOrderListColumns,
-    onSave: handleColumnChange,
-  });
+  const { handlers, staticColumns, visibleColumns, selectedColumns } =
+    useColumns({
+      // Version the persisted layout so staff accounts created before the
+      // tracking column do not keep hiding it through legacy grid metadata.
+      gridName: "order_list_country_tracking_comments_v3",
+      staticColumns: memoizedStaticColumns,
+      selectedColumns: settings?.columns ?? [],
+      mapColumnsOnSave: orderOrderListColumns,
+      onSave: handleColumnChange,
+    });
   const handleHeaderClick = useCallback(
     (col: number) => {
-      const { columnName, columnId } = getColumnNameAndId(visibleColumns[col].id);
+      const { columnName, columnId } = getColumnNameAndId(
+        visibleColumns[col].id,
+      );
 
       if (canBeSorted(columnName)) {
         onSort(columnName, columnId);
@@ -104,18 +113,34 @@ export const OrderListDatagrid = ({
     },
     [rowAnchor, orders],
   );
-  const orderIds = useMemo(() => orders?.map(order => order.id) ?? [], [orders]);
-  const trackingEnabled = visibleColumns.some(column => column.id === "tracking");
+  const orderIds = useMemo(
+    () => orders?.map((order) => order.id) ?? [],
+    [orders],
+  );
+  const trackingEnabled = visibleColumns.some(
+    (column) => column.id === "tracking",
+  );
   const tracking = useOrderTrackingSummaries(orderIds, trackingEnabled);
   const handleColumnMove = useCallback(
     (startIndex: number, endIndex: number): void => {
-      const countryIndex = visibleColumns.findIndex(column => column.id === "country");
-      const trackingIndex = visibleColumns.findIndex(column => column.id === "tracking");
-      const firstFixedIndex = countryIndex >= 0 ? countryIndex : trackingIndex;
+      const countryIndex = visibleColumns.findIndex(
+        (column) => column.id === "country",
+      );
+      const trackingIndex = visibleColumns.findIndex(
+        (column) => column.id === "tracking",
+      );
+      const commentsIndex = visibleColumns.findIndex(
+        (column) => column.id === "comments",
+      );
+      const fixedIndexes = [countryIndex, trackingIndex, commentsIndex].filter(
+        (index) => index >= 0,
+      );
+      const firstFixedIndex = fixedIndexes.length
+        ? Math.min(...fixedIndexes)
+        : -1;
 
       if (
-        startIndex === countryIndex ||
-        startIndex === trackingIndex ||
+        fixedIndexes.includes(startIndex) ||
         (firstFixedIndex >= 0 && endIndex >= firstFixedIndex)
       ) {
         return;

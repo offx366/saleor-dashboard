@@ -48,10 +48,15 @@ export const columnsMessages = defineMessages({
     id: "WKITZr",
     defaultMessage: "Tracking status",
   },
+  comments: {
+    id: "wCgTu5",
+    defaultMessage: "Comments",
+  },
   net: {
     id: "rU2b3o",
     defaultMessage: "Net",
-    description: "orders list column: net product value (excludes tax and shipping)",
+    description:
+      "orders list column: net product value (excludes tax and shipping)",
   },
   total: {
     id: "MJ2jZQ",

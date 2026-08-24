@@ -54,6 +54,7 @@ const TOTAL_COLUMN_ID = "total";
 const CHANNEL_COLUMN_ID = "channel";
 const COUNTRY_COLUMN_ID = "country";
 const TRACKING_COLUMN_ID = "tracking";
+const COMMENTS_COLUMN_ID = "comments";
 
 export const oldDefaultOrderListColumns = [
   "number",
@@ -77,22 +78,36 @@ export const defaultOrderListColumnsWithCountryAndTracking = [
   "channel",
   "country",
   "tracking",
+  COMMENTS_COLUMN_ID,
 ];
 
-export const shouldMigrateOrderListColumns = (columns: string[] | undefined): boolean =>
+export const shouldMigrateOrderListColumns = (
+  columns: string[] | undefined,
+): boolean =>
   Boolean(
     columns?.length &&
-      (!columns.includes(COUNTRY_COLUMN_ID) || !columns.includes(TRACKING_COLUMN_ID)),
+      (!columns.includes(COUNTRY_COLUMN_ID) ||
+        !columns.includes(TRACKING_COLUMN_ID) ||
+        !columns.includes(COMMENTS_COLUMN_ID)),
   );
 
-export const getOrderListColumns = (columns: string[] | undefined): string[] | undefined =>
+export const getOrderListColumns = (
+  columns: string[] | undefined,
+): string[] | undefined =>
   columns
     ? orderOrderListColumns(
         shouldMigrateOrderListColumns(columns)
           ? [
               ...columns,
-              ...(columns.includes(COUNTRY_COLUMN_ID) ? [] : [COUNTRY_COLUMN_ID]),
-              ...(columns.includes(TRACKING_COLUMN_ID) ? [] : [TRACKING_COLUMN_ID]),
+              ...(columns.includes(COUNTRY_COLUMN_ID)
+                ? []
+                : [COUNTRY_COLUMN_ID]),
+              ...(columns.includes(TRACKING_COLUMN_ID)
+                ? []
+                : [TRACKING_COLUMN_ID]),
+              ...(columns.includes(COMMENTS_COLUMN_ID)
+                ? []
+                : [COMMENTS_COLUMN_ID]),
             ]
           : columns,
       )
@@ -105,19 +120,26 @@ export const getOrderListColumns = (columns: string[] | undefined): string[] | u
 export function orderOrderListColumns(columns: string[]): string[] {
   const hasCountry = columns.includes(COUNTRY_COLUMN_ID);
   const hasTracking = columns.includes(TRACKING_COLUMN_ID);
+  const hasComments = columns.includes(COMMENTS_COLUMN_ID);
   const fixedColumns = [
     ...(hasCountry ? [COUNTRY_COLUMN_ID] : []),
     ...(hasTracking ? [TRACKING_COLUMN_ID] : []),
+    ...(hasComments ? [COMMENTS_COLUMN_ID] : []),
   ];
   let orderedColumns = columns.filter(
-    columnId => columnId !== COUNTRY_COLUMN_ID && columnId !== TRACKING_COLUMN_ID,
+    (columnId) =>
+      columnId !== COUNTRY_COLUMN_ID &&
+      columnId !== TRACKING_COLUMN_ID &&
+      columnId !== COMMENTS_COLUMN_ID,
   );
 
   if (!orderedColumns.includes(NET_COLUMN_ID)) {
     return [...orderedColumns, ...fixedColumns];
   }
 
-  const withoutNet = orderedColumns.filter(columnId => columnId !== NET_COLUMN_ID);
+  const withoutNet = orderedColumns.filter(
+    (columnId) => columnId !== NET_COLUMN_ID,
+  );
   const insertBeforeIndex = withoutNet.includes(TOTAL_COLUMN_ID)
     ? withoutNet.indexOf(TOTAL_COLUMN_ID)
     : withoutNet.includes(CHANNEL_COLUMN_ID)

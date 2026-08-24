@@ -37,6 +37,12 @@ export const orderListQuery = gql`
             id
           }
           created
+          events {
+            date
+            id
+            message
+            type
+          }
           id
           number
           paymentStatus

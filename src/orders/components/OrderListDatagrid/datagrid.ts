@@ -76,6 +76,11 @@ export const orderListStaticColumnAdapter = (
       width: 280,
     },
     {
+      id: "comments",
+      title: intl.formatMessage(columnsMessages.comments),
+      width: 320,
+    },
+    {
       id: "net",
       title: intl.formatMessage(columnsMessages.net),
       width: 150,
@@ -156,6 +161,8 @@ export const useGetCellContent = ({
           trackingHasError,
           trackingProviderError,
         );
+      case "comments":
+        return getCommentsCellContent(rowData);
       case "net":
         return getNetCellContent(rowData);
       case "total":
@@ -251,6 +258,23 @@ export function getCountryCellContent(
         imageAspectRatio: 3 / 2,
       })
     : readonlyTextCell(country.country);
+}
+
+export function getCommentsCellContent(
+  rowData: RelayToFlat<OrderListQuery["orders"]>[number],
+): TextCell {
+  const comment = rowData?.events
+    ?.filter(
+      (event) => event.type === "NOTE_ADDED" || event.type === "NOTE_UPDATED",
+    )
+    .sort(
+      (first, second) =>
+        Date.parse(second.date ?? "") - Date.parse(first.date ?? ""),
+    )
+    .find((event) => event.message?.trim())
+    ?.message?.trim();
+
+  return readonlyTextCell(comment || "-");
 }
 
 const higherPriorityChargeStatuses = [OrderChargeStatusEnum.OVERCHARGED];
