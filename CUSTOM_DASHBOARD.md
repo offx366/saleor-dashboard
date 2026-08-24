@@ -79,11 +79,14 @@ Server-side proxy:
 /home/saleor/saleor-platform/chatwood/globalhealingweb_bot/server.mjs
 ```
 
-Inbound mail for `info@globalhealingweb.com` and
+The conversation endpoint receives the Saleor order ID and resolves the
+order's channel server-side before loading mail or sending a reply. Book orders
+(`default-channel`/RusLibrary channels) use `info@ruslibrary.com`; pharmacy
+orders use `info@globalhealingweb.com`. Inbound mail for those addresses and
 `support@globalhealingweb.com` is routed to iCloud. The proxy performs
 read-only IMAP searches for the exact order email and filters inbound messages
-to those business recipients. It does not import or modify the rest of the
-mailbox. The app-specific password is mounted from
+to the channel's business recipients. It does not import or modify the rest of
+the mailbox. The app-specific password is mounted from
 `/home/saleor/.secrets/ghw_icloud_app_password` as a Docker secret and must
 never be committed to Git.
 

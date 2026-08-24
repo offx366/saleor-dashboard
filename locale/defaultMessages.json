@@ -10856,8 +10856,8 @@
     "context": "model type detail cogs menu, opens the delete-confirmation dialog",
     "string": "Delete model type"
   },
-  "mok1OX": {
-    "string": "The reply will be sent to {email} from info@globalhealingweb.com."
+  "dM+0w9": {
+    "string": "The reply will be sent to {email} from {sender}."
   },
   "mqrPth": {
     "string": "Shipment journey"

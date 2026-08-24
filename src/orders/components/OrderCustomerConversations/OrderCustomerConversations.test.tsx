@@ -1,8 +1,12 @@
 import Wrapper from "@test/wrapper";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 
-import { OrderCustomerConversations } from "./OrderCustomerConversations";
+import {
+  OrderCustomerConversations,
+  resolveFallbackSenderEmail,
+} from "./OrderCustomerConversations";
 
 const mockAuthenticatedFetch = jest.fn();
 
@@ -20,18 +24,21 @@ jest.mock("@dashboard/legacy-sdk", (): Record<string, unknown> => {
 
 jest.mock("@dashboard/components/Card", () => ({
   DashboardCard: Object.assign(
-    ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    ({ children }: { children: ReactNode }) => <div>{children}</div>,
     {
-      Header: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-      Title: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-      Toolbar: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-      Content: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+      Header: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+      Title: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+      Toolbar: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+      Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
     },
   ),
 }));
 
 const conversationsResponse = {
   email: "customer@example.com",
+  senderEmail: "info@ruslibrary.com",
+  senderName: "RusLibrary",
+  channelSlug: "default-channel",
   conversations: [
     {
       id: 124,
@@ -106,6 +113,7 @@ describe("OrderCustomerConversations", () => {
           email="customer@example.com"
           orderId="T3JkZXI6NTAx"
           orderNumber="501"
+          channelSlug="default-channel"
         />
       </Wrapper>,
     );
@@ -123,8 +131,17 @@ describe("OrderCustomerConversations", () => {
       "https://chat.ruslibrary.com/app/accounts/1/conversations/124",
     );
     expect(mockAuthenticatedFetch).toHaveBeenCalledWith(
-      "https://chat.ruslibrary.com/cw/ghw-bot?email=customer%40example.com",
+      "https://chat.ruslibrary.com/cw/ghw-bot?email=customer%40example.com&orderId=T3JkZXI6NTAx",
       expect.objectContaining({ method: "GET", signal: expect.any(AbortSignal) }),
+    );
+  });
+
+  it("uses the RusLibrary sender for the book channel before the server response arrives", () => {
+    expect(resolveFallbackSenderEmail({ channelSlug: "default-channel" })).toBe(
+      "info@ruslibrary.com",
+    );
+    expect(resolveFallbackSenderEmail({ channelSlug: "globalhealingweb" })).toBe(
+      "info@globalhealingweb.com",
     );
   });
 
@@ -154,6 +171,7 @@ describe("OrderCustomerConversations", () => {
           email="customer@example.com"
           orderId="T3JkZXI6NTAx"
           orderNumber="501"
+          channelSlug="default-channel"
         />
       </Wrapper>,
     );

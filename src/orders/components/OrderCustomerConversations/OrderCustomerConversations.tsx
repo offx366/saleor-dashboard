@@ -9,6 +9,8 @@ import { FormattedMessage, useIntl } from "react-intl";
 import styles from "./OrderCustomerConversations.module.css";
 
 const CUSTOMER_CONVERSATIONS_ENDPOINT = "https://chat.ruslibrary.com/cw/ghw-bot";
+const GHW_SENDER_EMAIL = "info@globalhealingweb.com";
+const RUS_SENDER_EMAIL = "info@ruslibrary.com";
 const authenticatedFetch = createFetch({ refreshOnUnauthorized: false });
 
 interface ConversationAttachment {
@@ -42,6 +44,9 @@ interface CustomerConversation {
 
 interface CustomerConversationsResponse {
   email: string;
+  senderEmail?: string | null;
+  senderName?: string | null;
+  channelSlug?: string | null;
   conversations: CustomerConversation[];
 }
 
@@ -49,14 +54,37 @@ interface OrderCustomerConversationsProps {
   email: string | null | undefined;
   orderId: string | null | undefined;
   orderNumber: string | null | undefined;
+  channelSlug?: string | null;
+  channelName?: string | null;
 }
 
 const getTimestamp = (value: number): Date => new Date(value * 1000);
+
+export const resolveFallbackSenderEmail = ({
+  channelSlug,
+  channelName,
+}: Pick<OrderCustomerConversationsProps, "channelSlug" | "channelName">): string => {
+  const channelIdentity = `${channelSlug || ""} ${channelName || ""}`
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+
+  if (
+    channelIdentity.includes("defaultchannel") ||
+    channelIdentity.includes("ruslibrary") ||
+    channelIdentity.includes("book")
+  ) {
+    return RUS_SENDER_EMAIL;
+  }
+
+  return GHW_SENDER_EMAIL;
+};
 
 export const OrderCustomerConversations = ({
   email,
   orderId,
   orderNumber,
+  channelSlug,
+  channelName,
 }: OrderCustomerConversationsProps): JSX.Element => {
   const intl = useIntl();
   const [data, setData] = useState<CustomerConversationsResponse | null>(null);
@@ -85,6 +113,10 @@ export const OrderCustomerConversations = ({
 
         endpoint.searchParams.set("email", email);
 
+        if (orderId) {
+          endpoint.searchParams.set("orderId", orderId);
+        }
+
         const response = await authenticatedFetch(endpoint.toString(), {
           method: "GET",
           signal,
@@ -110,8 +142,11 @@ export const OrderCustomerConversations = ({
         }
       }
     },
-    [email],
+    [email, orderId],
   );
+
+  const senderEmail =
+    data?.senderEmail || resolveFallbackSenderEmail({ channelSlug, channelName });
 
   const sendEmail = useCallback(async (): Promise<void> => {
     const trimmedMessage = message.trim();
@@ -231,9 +266,9 @@ export const OrderCustomerConversations = ({
             </Text>
             <Text size={2} color="default2">
               <FormattedMessage
-                id="mok1OX"
-                defaultMessage="The reply will be sent to {email} from info@globalhealingweb.com."
-                values={{ email }}
+                id="dM+0w9"
+                defaultMessage="The reply will be sent to {email} from {sender}."
+                values={{ email, sender: senderEmail }}
               />
             </Text>
             <Input

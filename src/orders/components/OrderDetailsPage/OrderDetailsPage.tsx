@@ -382,6 +382,8 @@ const OrderDetailsPage = (props: OrderDetailsPageProps) => {
           email={order?.userEmail || order?.user?.email}
           orderId={order?.id}
           orderNumber={order?.number}
+          channelSlug={order?.channel?.slug}
+          channelName={order?.channel?.name}
         />
         <CardSpacer />
         <Divider />
