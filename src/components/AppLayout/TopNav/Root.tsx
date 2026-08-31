@@ -5,6 +5,7 @@ import { type PropsWithChildren } from "react";
 import useAppChannel from "../AppChannelContext";
 import AppChannelSelect from "../AppChannelSelect";
 import { ContextualLine } from "../ContextualLinks/ContextualLine";
+import styles from "./Root.module.css";
 import { TopNavLink } from "./TopNavLink";
 import { TopNavWrapper } from "./TopNavWrapper";
 
@@ -57,9 +58,10 @@ export const Root = ({
           {subtitleTop}
         </ContextualLine>
       ) : null}
-      <Box display="flex" alignItems="center" width="100%">
+      <Box className={styles.headerRow} display="flex" alignItems="center" width="100%">
         {href && <TopNavLink to={href} />}
         <Box
+          className={styles.title}
           __flex={isAlignToRight ? "1 1 auto" : 0}
           overflow="hidden"
           title={typeof title === "string" ? title : undefined}
@@ -69,6 +71,7 @@ export const Root = ({
           </Text>
         </Box>
         <Box
+          className={styles.actions}
           display="flex"
           flexWrap="nowrap"
           height="100%"

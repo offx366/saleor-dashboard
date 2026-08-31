@@ -1,0 +1,19 @@
+.headerRow,
+.title,
+.actions {
+  min-width: 0;
+}
+
+@media (max-width: 47.99rem) {
+  .headerRow {
+    flex-wrap: wrap;
+    align-content: flex-start;
+    row-gap: var(--mu-spacing-3);
+  }
+
+  .title,
+  .actions {
+    flex: 1 1 100% !important;
+    width: 100%;
+  }
+}

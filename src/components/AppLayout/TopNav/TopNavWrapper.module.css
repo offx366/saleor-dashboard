@@ -4,3 +4,10 @@
     padding-right: var(--mu-spacing-4) !important;
   }
 }
+
+@media (max-width: 47.99rem) {
+  .wrapper {
+    height: auto !important;
+    min-height: 4.5rem;
+  }
+}
