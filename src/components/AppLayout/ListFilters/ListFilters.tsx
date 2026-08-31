@@ -7,6 +7,7 @@ import { ExpressionFilters } from "./components/ExpressionFilters";
 import { FiltersSelect } from "./components/FiltersSelect";
 import { LegacyFiltersPresetsAlert } from "./components/LegacyFiltersPresetsAlert";
 import SearchInput from "./components/SearchInput";
+import styles from "./ListFilters.module.css";
 
 interface NewFilterProps extends SearchPageProps {
   type: "expression-filter";
@@ -41,8 +42,15 @@ export const ListFilters = <TFilterKeys extends string = string>({
   return (
     <>
       {isExpressionFilter && <LegacyFiltersPresetsAlert />}
-      <Box display="grid" __gridTemplateColumns="auto 1fr" gap={4} paddingBottom={2} paddingX={6}>
-        <Box display="flex" alignItems="center" gap={4}>
+      <Box
+        className={styles.filterBar}
+        display="grid"
+        __gridTemplateColumns="auto 1fr"
+        gap={4}
+        paddingBottom={2}
+        paddingX={6}
+      >
+        <Box className={styles.controls} display="flex" alignItems="center" gap={4}>
           {isExpressionFilter ? (
             <ExpressionFilters data-test-id="filters-button" />
           ) : (
@@ -54,7 +62,7 @@ export const ListFilters = <TFilterKeys extends string = string>({
               onFilterAttributeFocus={props.onFilterAttributeFocus}
             />
           )}
-          <Box __width="360px">
+          <Box className={styles.search} __width="360px">
             <SearchInput
               initialSearch={initialSearch}
               placeholder={searchPlaceholder}
@@ -63,7 +71,7 @@ export const ListFilters = <TFilterKeys extends string = string>({
             />
           </Box>
         </Box>
-        <Box display="flex" justifyContent="flex-end">
+        <Box className={styles.actions} display="flex" justifyContent="flex-end">
           {actions}
         </Box>
       </Box>

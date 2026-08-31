@@ -52,7 +52,10 @@ export const Sidebar = () => {
       >
         <SidebarContent />
       </Box>
-      <Box display={{ mobile: "block", tablet: "block", desktop: "none" }}>
+      <Box
+        className={classes.mobileDrawer}
+        display={{ mobile: "block", tablet: "block", desktop: "none" }}
+      >
         <Drawer>
           <Drawer.Trigger>
             <Box

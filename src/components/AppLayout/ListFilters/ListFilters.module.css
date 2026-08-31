@@ -1,0 +1,30 @@
+.filterBar,
+.controls,
+.search,
+.actions {
+  min-width: 0;
+}
+
+@media (max-width: 47.99rem) {
+  .filterBar {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: var(--mu-spacing-2) !important;
+    padding-right: var(--mu-spacing-4) !important;
+    padding-left: var(--mu-spacing-4) !important;
+  }
+
+  .controls {
+    flex-wrap: wrap;
+    gap: var(--mu-spacing-2) !important;
+  }
+
+  .search {
+    order: -1;
+    width: 100% !important;
+    flex-basis: 100%;
+  }
+
+  .actions {
+    justify-content: flex-start !important;
+  }
+}

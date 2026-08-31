@@ -1,0 +1,16 @@
+.sidebarSlot {
+  min-width: 0;
+}
+
+@media (max-width: 63.99rem) {
+  .sidebarSlot {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    width: 4rem;
+    height: 4.5rem !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+}

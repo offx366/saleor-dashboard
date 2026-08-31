@@ -1256,7 +1256,7 @@ export const orders: RelayToFlat<OrderListQuery["orders"]> = [
 ].map(({ customerNote: _customerNote, ...order }) => ({
   ...order,
   events: [],
-}));
+})) as RelayToFlat<OrderListQuery["orders"]>;
 
 export const ORDER_AMOUNT = 234.93;
 

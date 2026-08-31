@@ -161,7 +161,7 @@ describe("getCommentsCellContent", () => {
   });
 
   it("shows a dash when the order has no comment", () => {
-    expect(getCommentsCellContent({ events: [] } as RowDataType).data).toBe(
+    expect(getCommentsCellContent({ events: [] } as unknown as RowDataType).data).toBe(
       "-",
     );
   });

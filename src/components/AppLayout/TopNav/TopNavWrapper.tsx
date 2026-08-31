@@ -2,6 +2,7 @@ import { Box, type BoxProps } from "@saleor/macaw-ui-next";
 import type * as React from "react";
 
 import { topBarHeight, topBarHeightSubtitle, topBarHeightSubtitleTop } from "../consts";
+import styles from "./TopNavWrapper.module.css";
 
 export const TopNavWrapper = ({
   children,
@@ -29,6 +30,7 @@ export const TopNavWrapper = ({
 
   return (
     <Box
+      className={styles.wrapper}
       display={hasSubtitle || hasSubtitleTop ? "block" : "flex"}
       alignItems="center"
       paddingX={6}

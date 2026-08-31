@@ -8,6 +8,21 @@
   display: block;
 }
 
+.mobileDrawer {
+  padding-top: var(--mu-spacing-3);
+  padding-left: var(--mu-spacing-3);
+}
+
+.mobileDrawer button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: var(--mu-border-radius-3);
+}
+
 /** This is used when we want to show smaller sidebar sooner than the default 1024px
 * in order to show more page content */
 @media (min-width: 1200px) {

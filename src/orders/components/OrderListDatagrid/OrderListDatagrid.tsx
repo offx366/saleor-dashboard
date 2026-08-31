@@ -10,6 +10,7 @@ import { useEmptyColumn } from "@dashboard/components/Datagrid/hooks/useEmptyCol
 import { DatagridPagination } from "@dashboard/components/TablePagination";
 import { type OrderListQuery } from "@dashboard/graphql";
 import { getPrevLocationState } from "@dashboard/hooks/useBackLinkWithState";
+import { useMediaQuery } from "@dashboard/hooks/useMediaQuery";
 import { type OrderListUrlSortField } from "@dashboard/orders/urls";
 import {
   type ListProps,
@@ -22,6 +23,7 @@ import { useCallback, useMemo } from "react";
 import { useIntl } from "react-intl";
 import { useLocation } from "react-router";
 
+import { OrderListMobile } from "../OrderListMobile/OrderListMobile";
 import { orderListStaticColumnAdapter, useGetCellContent } from "./datagrid";
 import { messages } from "./messages";
 import { useOrderTrackingSummaries } from "./useOrderTrackingSummaries";
@@ -54,6 +56,7 @@ export const OrderListDatagrid = ({
 }: OrderListDatagridProps) => {
   const location = useLocation();
   const intl = useIntl();
+  const isMobile = useMediaQuery("(max-width: 767px)");
   const datagrid = useDatagridChangeState();
   const ordersLength = getOrdersRowsLength(orders, disabled);
   const handleColumnChange = useCallback(
@@ -117,7 +120,7 @@ export const OrderListDatagrid = ({
     () => orders?.map((order) => order.id) ?? [],
     [orders],
   );
-  const trackingEnabled = visibleColumns.some(
+  const trackingEnabled = !isMobile && visibleColumns.some(
     (column) => column.id === "tracking",
   );
   const tracking = useOrderTrackingSummaries(orderIds, trackingEnabled);
@@ -162,35 +165,45 @@ export const OrderListDatagrid = ({
   return (
     <Box __marginTop={ordersLength > 0 ? -1 : 0}>
       <DatagridChangeStateContext.Provider value={datagrid}>
-        <Datagrid
-          readonly
-          rowMarkers="none"
-          loading={disabled}
-          columnSelect="single"
-          hasRowHover={hasRowHover}
-          freezeColumns={2}
-          verticalBorder={false}
-          availableColumns={visibleColumns}
-          onHeaderClicked={handleHeaderClick}
-          emptyText={intl.formatMessage(messages.emptyText)}
-          getCellContent={getCellContent}
-          getCellError={() => false}
-          menuItems={() => []}
-          rows={getOrdersRowsLength(orders, disabled)}
-          selectionActions={() => null}
-          onColumnResize={handlers.onResize}
-          onColumnMoved={handleColumnMove}
-          renderColumnPicker={() => (
-            <ColumnPicker
-              staticColumns={staticColumns}
-              selectedColumns={selectedColumns}
-              onToggle={handlers.onToggle}
-            />
-          )}
-          onRowClick={handleRowClick}
-          rowAnchor={handleRowAnchor}
-          navigatorOpts={{ state: getPrevLocationState(location) }}
-        />
+        {isMobile ? (
+          <OrderListMobile
+            disabled={disabled}
+            emptyText={intl.formatMessage(messages.emptyText)}
+            onRowClick={onRowClick}
+            orders={orders ?? []}
+            rowAnchor={rowAnchor}
+          />
+        ) : (
+          <Datagrid
+            readonly
+            rowMarkers="none"
+            loading={disabled}
+            columnSelect="single"
+            hasRowHover={hasRowHover}
+            freezeColumns={2}
+            verticalBorder={false}
+            availableColumns={visibleColumns}
+            onHeaderClicked={handleHeaderClick}
+            emptyText={intl.formatMessage(messages.emptyText)}
+            getCellContent={getCellContent}
+            getCellError={() => false}
+            menuItems={() => []}
+            rows={getOrdersRowsLength(orders, disabled)}
+            selectionActions={() => null}
+            onColumnResize={handlers.onResize}
+            onColumnMoved={handleColumnMove}
+            renderColumnPicker={() => (
+              <ColumnPicker
+                staticColumns={staticColumns}
+                selectedColumns={selectedColumns}
+                onToggle={handlers.onToggle}
+              />
+            )}
+            onRowClick={handleRowClick}
+            rowAnchor={handleRowAnchor}
+            navigatorOpts={{ state: getPrevLocationState(location) }}
+          />
+        )}
 
         <DatagridPagination
           component="div"

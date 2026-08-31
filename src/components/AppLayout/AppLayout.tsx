@@ -9,6 +9,7 @@ import NavigatorSearch from "../NavigatorSearch";
 import { useSavebarRef } from "../Savebar/SavebarRefContext";
 import { Sidebar } from "../Sidebar";
 import { SidebarProvider } from "../Sidebar/SidebarContext";
+import styles from "./AppLayout.module.css";
 import { savebarHeight } from "./consts";
 import { useStyles } from "./styles";
 
@@ -30,6 +31,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       <Box display="grid" __gridTemplateColumns="auto 1fr">
         {appState.loading && <LinearProgress className={classes.appLoader} color="primary" />}
         <Box
+          className={styles.sidebarSlot}
           height="100vh"
           borderColor="default1"
           borderRightWidth={1}

@@ -1,0 +1,6 @@
+@media (max-width: 63.99rem) {
+  .wrapper {
+    padding-left: 4.5rem !important;
+    padding-right: var(--mu-spacing-4) !important;
+  }
+}
