@@ -1,3 +1,4 @@
+import { usePointerDragClickGuard } from "@dashboard/components/Datagrid/hooks/usePointerDragClickGuard";
 import { formatMoney } from "@dashboard/components/Money";
 import { Pill } from "@dashboard/components/Pill";
 import { Placeholder } from "@dashboard/components/Placeholder";
@@ -49,6 +50,13 @@ export const OrderListMobile = ({
   const intl = useIntl();
   const { locale } = useLocale();
   const location = useLocation();
+  const {
+    onClickCapture,
+    onPointerCancelCapture,
+    onPointerDownCapture,
+    onPointerMoveCapture,
+    onPointerUpCapture,
+  } = usePointerDragClickGuard();
 
   if (disabled) {
     return (
@@ -72,7 +80,15 @@ export const OrderListMobile = ({
   }
 
   return (
-    <ul className={styles.list} data-test-id="order-mobile-list">
+    <ul
+      className={styles.list}
+      data-test-id="order-mobile-list"
+      onClickCapture={onClickCapture}
+      onPointerCancelCapture={onPointerCancelCapture}
+      onPointerDownCapture={onPointerDownCapture}
+      onPointerMoveCapture={onPointerMoveCapture}
+      onPointerUpCapture={onPointerUpCapture}
+    >
       {orders.map(order => {
         const rowUrl = rowAnchor?.(order.id);
         const country = order.shippingAddress?.country ?? order.billingAddress?.country;
