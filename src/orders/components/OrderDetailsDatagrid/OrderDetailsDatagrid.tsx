@@ -10,6 +10,7 @@ import { useEmptyColumn } from "@dashboard/components/Datagrid/hooks/useEmptyCol
 import { type OrderDetailsFragment, type OrderLineFragment } from "@dashboard/graphql";
 import useListSettings from "@dashboard/hooks/useListSettings";
 import useLocale from "@dashboard/hooks/useLocale";
+import { useMediaQuery } from "@dashboard/hooks/useMediaQuery";
 import useNavigator from "@dashboard/hooks/useNavigator";
 import { OrderLineRowActions } from "@dashboard/orders/components/OrderLineRowActions/OrderLineRowActions";
 import { messages as orderMessages } from "@dashboard/orders/components/OrderListDatagrid/messages";
@@ -23,6 +24,7 @@ import { Box, type vars } from "@saleor/macaw-ui-next";
 import { useCallback, useMemo } from "react";
 import { useIntl } from "react-intl";
 
+import { OrderDetailsLineList } from "../OrderDetailsLineList/OrderDetailsLineList";
 import {
   createGetCellContent,
   isLineExplainable,
@@ -63,6 +65,7 @@ export const OrderDetailsDatagrid = ({
   const intl = useIntl();
   const navigate = useNavigator();
   const { locale } = useLocale();
+  const isMobile = useMediaQuery("(max-width: 767px)");
 
   const datagrid = useDatagridChangeState();
   const { updateListSettings, settings } = useListSettings(ListViews.ORDER_DETAILS_LIST);
@@ -179,45 +182,56 @@ export const OrderDetailsDatagrid = ({
 
   return (
     <DatagridChangeStateContext.Provider value={datagrid}>
-      <Box position="relative">
-        {showPricingRipple && (
-          <Box position="absolute" __top="-4px" __right="64px" __zIndex="1">
-            <Ripple model={rippleOrderLinePriceBreakdown} />
-          </Box>
-        )}
-        <Datagrid
-          showEmptyDatagrid
-          themeOverride={datagridCustomTheme}
-          rowMarkers="none"
-          columnSelect="single"
-          freezeColumns={2}
-          availableColumns={visibleColumns}
-          verticalBorder={false}
-          showTopBorder={false}
-          emptyText={intl.formatMessage(orderMessages.emptyText)}
-          getCellContent={getCellContent}
-          getCellError={() => false}
-          menuItems={getMenuItems}
-          rows={loading ? 1 : lines.length}
-          selectionActions={() => null}
-          onColumnResize={handlers.onResize}
-          onColumnMoved={handlers.onMove}
-          recentlyAddedColumn={recentlyAddedColumn}
-          renderColumnPicker={() => (
-            <ColumnPicker
-              staticColumns={staticColumns}
-              selectedColumns={selectedColumns}
-              onToggle={handlers.onToggle}
-              align="end"
-              backgroundColor={columnPickerBackgroundColor}
-            />
-          )}
-          renderRowActions={renderRowActions}
-          rowActionBarWidth={ROW_ACTION_BAR_WIDTH}
-          onRowClick={onShowLinePriceBreakdown ? handleRowClick : undefined}
-          onCellActivated={onShowLinePriceBreakdown ? handleRowClick : undefined}
+      {isMobile ? (
+        <OrderDetailsLineList
+          getLineMenuItems={getLineMenuItems}
+          lineReasons={lineReasons}
+          lines={lines}
+          loading={loading}
+          onOrderLineShowMetadata={onOrderLineShowMetadata}
+          onShowLinePriceBreakdown={onShowLinePriceBreakdown}
         />
-      </Box>
+      ) : (
+        <Box position="relative">
+          {showPricingRipple && (
+            <Box position="absolute" __top="-4px" __right="64px" __zIndex="1">
+              <Ripple model={rippleOrderLinePriceBreakdown} />
+            </Box>
+          )}
+          <Datagrid
+            showEmptyDatagrid
+            themeOverride={datagridCustomTheme}
+            rowMarkers="none"
+            columnSelect="single"
+            freezeColumns={2}
+            availableColumns={visibleColumns}
+            verticalBorder={false}
+            showTopBorder={false}
+            emptyText={intl.formatMessage(orderMessages.emptyText)}
+            getCellContent={getCellContent}
+            getCellError={() => false}
+            menuItems={getMenuItems}
+            rows={loading ? 1 : lines.length}
+            selectionActions={() => null}
+            onColumnResize={handlers.onResize}
+            onColumnMoved={handlers.onMove}
+            recentlyAddedColumn={recentlyAddedColumn}
+            renderColumnPicker={() => (
+              <ColumnPicker
+                staticColumns={staticColumns}
+                selectedColumns={selectedColumns}
+                onToggle={handlers.onToggle}
+                align="end"
+                backgroundColor={columnPickerBackgroundColor}
+              />
+            )}
+            renderRowActions={renderRowActions}
+            rowActionBarWidth={ROW_ACTION_BAR_WIDTH}
+            onRowClick={onShowLinePriceBreakdown ? handleRowClick : undefined}
+            onCellActivated={onShowLinePriceBreakdown ? handleRowClick : undefined}
+          />
+        </Box>
+      )}
     </DatagridChangeStateContext.Provider>
   );
 };

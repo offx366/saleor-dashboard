@@ -49,6 +49,13 @@ export const SingleLine: Story = {
   },
 };
 
+export const Mobile: Story = {
+  parameters: {
+    chromatic: { viewports: [390] },
+    layout: "fullscreen",
+  },
+};
+
 export const WithGiftItem: Story = {
   args: {
     lines: [
