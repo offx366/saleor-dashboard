@@ -610,7 +610,6 @@ export const Datagrid = ({
     <FullScreenContainer open={isOpen} className={fullScreenClasses.fullScreenContainer}>
       <PreventHistoryBack
         __height={isOpen ? "100%" : "auto"}
-        onClickCapture={onClickCapture}
         onPointerCancelCapture={onPointerCancelCapture}
         onPointerDownCapture={onPointerDownCapture}
         onPointerMoveCapture={onPointerMoveCapture}
@@ -753,6 +752,9 @@ export const Datagrid = ({
             aria-hidden={true}
             onWheelCapture={hideLinkAndShowAfterDelay}
             onClick={rowAnchorHandler}
+            // Only the overlay. Capture on PreventHistoryBack would also swallow
+            // header, column-picker, and row-action clicks after a 6px slop.
+            onClickCapture={onClickCapture}
           />
         )}
       </PreventHistoryBack>
