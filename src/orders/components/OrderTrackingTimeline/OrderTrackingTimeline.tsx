@@ -32,7 +32,9 @@ interface OrderTrackingTimelineProps {
 }
 
 const formatDateTime = (date: Date, intl: IntlShape): string =>
-  `${intl.formatDate(date, {
+  Number.isNaN(date.getTime())
+    ? intl.formatMessage({ id: "trackingNotCheckedYet", defaultMessage: "Not checked yet" })
+    : `${intl.formatDate(date, {
     day: "numeric",
     month: "short",
     year: "numeric",

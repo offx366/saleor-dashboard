@@ -129,6 +129,10 @@ export const getTrackingStatusLabel = (status: string, intl: IntlShape): string 
     return intl.formatMessage(trackingMessages.unknown);
   }
 
+  if (normalized === "pending") {
+    return intl.formatMessage({ id: "trackingCheckPending", defaultMessage: "Waiting for carrier check" });
+  }
+
   return status.replace(/([a-z])([A-Z])/g, "$1 $2");
 };
 
