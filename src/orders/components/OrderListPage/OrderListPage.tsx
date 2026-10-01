@@ -140,7 +140,9 @@ const OrderListPage = ({
               onSave={onTabSave}
               isOpen={isFilterPresetOpen}
               onOpenChange={setFilterPresetOpen}
-              selectAllLabel={intl.formatMessage(orderMessages.filterPresetsAll)}
+              selectAllLabel={intl.formatMessage(
+                inTrash ? trashMessages.trash : orderMessages.filterPresetsAll,
+              )}
             />
           </Box>
 
