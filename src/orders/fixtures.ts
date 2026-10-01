@@ -1262,6 +1262,7 @@ export const ORDER_AMOUNT = 234.93;
 
 export const order = (placeholder: string): OrderDetailsFragment => ({
   __typename: "Order",
+  privateMetadata: [],
   voucher: null,
   giftCards: [],
   displayGrossPrices: true,
@@ -2371,6 +2372,7 @@ export const order = (placeholder: string): OrderDetailsFragment => ({
 
 export const draftOrder = (placeholder: string): OrderDetailsFragment => ({
   __typename: "Order" as const,
+  privateMetadata: [],
   voucher: null,
   chargeStatus: OrderChargeStatusEnum.NONE,
   displayGrossPrices: true,

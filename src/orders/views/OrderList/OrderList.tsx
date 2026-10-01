@@ -24,7 +24,7 @@ import createSortHandler from "@dashboard/utils/handlers/sortHandler";
 import { mapEdgesToItems, mapNodeToChoice } from "@dashboard/utils/maps";
 import { getSortParams } from "@dashboard/utils/sort";
 import { useOnboarding } from "@dashboard/welcomePage/WelcomePageOnboarding/onboardingContext";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useIntl } from "react-intl";
 
 import {
@@ -94,6 +94,8 @@ const OrderList = ({ params }: OrderListProps) => {
   const intl = useIntl();
   const { channel, availableChannels } = useAppChannel(false);
   const user = useUser();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const clearSelection = useRef<(() => void) | null>(null);
   const channels = user?.user?.accessibleChannels ?? [];
   const [createOrder, createOrderOpts] = useOrderDraftCreateMutation({
     onCompleted: data => {
@@ -135,13 +137,18 @@ const OrderList = ({ params }: OrderListProps) => {
       where: filterVariables,
       search: params.query,
       sort: getSortQueryVariables(params),
+      inTrash: params.inTrash === "true",
     }),
     // This is intentional - if we change deps array, we will make query
     // on each character change in filters, NOT when user clicks "SAVE"
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [params, settings.rowNumber, valueProvider.value],
   );
-  const { data } = useOrderListQuery({
+  const {
+    data,
+    refetch,
+    loading: ordersLoading,
+  } = useOrderListQuery({
     displayLoader: true,
     skip: valueProvider.loading,
     variables: queryVariables,
@@ -152,6 +159,15 @@ const OrderList = ({ params }: OrderListProps) => {
     queryString: params,
   });
   const handleSort = createSortHandler(navigate, orderListUrl, params);
+  const orders = mapEdgesToItems(data?.orders) ?? [];
+
+  useEffect(
+    function resetOrderSelection() {
+      setSelectedIds([]);
+      clearSelection.current?.();
+    },
+    [queryVariables],
+  );
 
   return (
     <PaginatorContext.Provider value={paginationValues}>
@@ -162,9 +178,30 @@ const OrderList = ({ params }: OrderListProps) => {
         }}
         settings={orderListSettings}
         currentTab={selectedPreset}
-        disabled={!data}
+        disabled={!data || ordersLoading}
         limits={limitOpts.data?.shop.limits}
-        orders={mapEdgesToItems(data?.orders)}
+        orders={orders}
+        selectedOrderIds={selectedIds}
+        onSelectOrderIds={(indexes, clear) => {
+          clearSelection.current = clear;
+          setSelectedIds(indexes.map(index => orders[index]?.id).filter(Boolean));
+        }}
+        onSelectCanceled={() =>
+          setSelectedIds(
+            orders
+              .filter(order => order.status === "CANCELED" && order.fulfillments.length === 0)
+              .map(order => order.id),
+          )
+        }
+        inTrash={params.inTrash === "true"}
+        onTrashViewChange={() =>
+          navigate(orderListUrl(params.inTrash === "true" ? {} : { inTrash: "true" }))
+        }
+        onTrashCompleted={() => {
+          setSelectedIds([]);
+          clearSelection.current?.();
+          void refetch();
+        }}
         sort={getSortParams(params)}
         onAdd={() => openModal("create-order")}
         onUpdateListSettings={updateListSettings}

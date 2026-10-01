@@ -12,12 +12,8 @@ import { type OrderListQuery } from "@dashboard/graphql";
 import { getPrevLocationState } from "@dashboard/hooks/useBackLinkWithState";
 import { useMediaQuery } from "@dashboard/hooks/useMediaQuery";
 import { type OrderListUrlSortField } from "@dashboard/orders/urls";
-import {
-  type ListProps,
-  type RelayToFlat,
-  type SortPage,
-} from "@dashboard/types";
-import { type Item } from "@glideapps/glide-data-grid";
+import { type ListProps, type RelayToFlat, type SortPage } from "@dashboard/types";
+import { CompactSelection, type Item } from "@glideapps/glide-data-grid";
 import { Box } from "@saleor/macaw-ui-next";
 import { useCallback, useMemo } from "react";
 import { useIntl } from "react-intl";
@@ -34,13 +30,13 @@ import {
   orderOrderListColumns,
 } from "./utils";
 
-interface OrderListDatagridProps
-  extends ListProps,
-    SortPage<OrderListUrlSortField> {
+interface OrderListDatagridProps extends ListProps, SortPage<OrderListUrlSortField> {
   orders: RelayToFlat<OrderListQuery["orders"]>;
   onRowClick?: (id: string) => void;
   rowAnchor?: (id: string) => string;
   hasRowHover?: boolean;
+  selectedOrderIds?: string[];
+  onSelectOrderIds?: (indexes: number[], clearSelection: () => void) => void;
 }
 
 export const OrderListDatagrid = ({
@@ -53,6 +49,8 @@ export const OrderListDatagrid = ({
   onRowClick,
   hasRowHover,
   rowAnchor,
+  selectedOrderIds = [],
+  onSelectOrderIds,
 }: OrderListDatagridProps) => {
   const location = useLocation();
   const intl = useIntl();
@@ -60,7 +58,7 @@ export const OrderListDatagrid = ({
   const datagrid = useDatagridChangeState();
   const ordersLength = getOrdersRowsLength(orders, disabled);
   const handleColumnChange = useCallback(
-    (picked) => {
+    picked => {
       onUpdateListSettings("columns", picked.filter(Boolean));
     },
     [onUpdateListSettings],
@@ -70,21 +68,18 @@ export const OrderListDatagrid = ({
     () => orderListStaticColumnAdapter(emptyColumn, intl, sort),
     [emptyColumn, intl, sort],
   );
-  const { handlers, staticColumns, visibleColumns, selectedColumns } =
-    useColumns({
-      // Version the persisted layout so staff accounts created before the
-      // tracking column do not keep hiding it through legacy grid metadata.
-      gridName: "order_list_country_tracking_comments_v3",
-      staticColumns: memoizedStaticColumns,
-      selectedColumns: settings?.columns ?? [],
-      mapColumnsOnSave: orderOrderListColumns,
-      onSave: handleColumnChange,
-    });
+  const { handlers, staticColumns, visibleColumns, selectedColumns } = useColumns({
+    // Version the persisted layout so staff accounts created before the
+    // tracking column do not keep hiding it through legacy grid metadata.
+    gridName: "order_list_country_tracking_comments_v3",
+    staticColumns: memoizedStaticColumns,
+    selectedColumns: settings?.columns ?? [],
+    mapColumnsOnSave: orderOrderListColumns,
+    onSave: handleColumnChange,
+  });
   const handleHeaderClick = useCallback(
     (col: number) => {
-      const { columnName, columnId } = getColumnNameAndId(
-        visibleColumns[col].id,
-      );
+      const { columnName, columnId } = getColumnNameAndId(visibleColumns[col].id);
 
       if (canBeSorted(columnName)) {
         onSort(columnName, columnId);
@@ -116,31 +111,16 @@ export const OrderListDatagrid = ({
     },
     [rowAnchor, orders],
   );
-  const orderIds = useMemo(
-    () => orders?.map((order) => order.id) ?? [],
-    [orders],
-  );
-  const trackingEnabled = !isMobile && visibleColumns.some(
-    (column) => column.id === "tracking",
-  );
+  const orderIds = useMemo(() => orders?.map(order => order.id) ?? [], [orders]);
+  const trackingEnabled = !isMobile && visibleColumns.some(column => column.id === "tracking");
   const tracking = useOrderTrackingSummaries(orderIds, trackingEnabled);
   const handleColumnMove = useCallback(
     (startIndex: number, endIndex: number): void => {
-      const countryIndex = visibleColumns.findIndex(
-        (column) => column.id === "country",
-      );
-      const trackingIndex = visibleColumns.findIndex(
-        (column) => column.id === "tracking",
-      );
-      const commentsIndex = visibleColumns.findIndex(
-        (column) => column.id === "comments",
-      );
-      const fixedIndexes = [countryIndex, trackingIndex, commentsIndex].filter(
-        (index) => index >= 0,
-      );
-      const firstFixedIndex = fixedIndexes.length
-        ? Math.min(...fixedIndexes)
-        : -1;
+      const countryIndex = visibleColumns.findIndex(column => column.id === "country");
+      const trackingIndex = visibleColumns.findIndex(column => column.id === "tracking");
+      const commentsIndex = visibleColumns.findIndex(column => column.id === "comments");
+      const fixedIndexes = [countryIndex, trackingIndex, commentsIndex].filter(index => index >= 0);
+      const firstFixedIndex = fixedIndexes.length ? Math.min(...fixedIndexes) : -1;
 
       if (
         fixedIndexes.includes(startIndex) ||
@@ -161,6 +141,18 @@ export const OrderListDatagrid = ({
     trackingHasError: tracking.hasError,
     trackingProviderError: tracking.providerError,
   });
+  const selection = useMemo(
+    () => ({
+      columns: CompactSelection.empty(),
+      rows: (orders ?? []).reduce(
+        (rows, order, index) => (selectedOrderIds.includes(order.id) ? rows.add(index) : rows),
+        CompactSelection.empty(),
+      ),
+    }),
+    [orders, selectedOrderIds],
+  );
+  const onSelect = (indexes: number[]) =>
+    onSelectOrderIds?.(indexes, () => onSelectOrderIds?.([], () => undefined));
 
   return (
     <Box __marginTop={ordersLength > 0 ? -1 : 0}>
@@ -172,11 +164,28 @@ export const OrderListDatagrid = ({
             onRowClick={onRowClick}
             orders={orders ?? []}
             rowAnchor={rowAnchor}
+            selectedOrderIds={selectedOrderIds}
+            onToggleSelection={
+              onSelectOrderIds
+                ? (id, checked) =>
+                    onSelect(
+                      (orders ?? []).flatMap((order, index) =>
+                        (order.id === id ? checked : selectedOrderIds.includes(order.id))
+                          ? [index]
+                          : [],
+                      ),
+                    )
+                : undefined
+            }
           />
         ) : (
           <Datagrid
             readonly
-            rowMarkers="none"
+            rowMarkers={onSelectOrderIds ? "checkbox-visible" : "none"}
+            controlledSelection={onSelectOrderIds ? selection : undefined}
+            onControlledSelectionChange={
+              onSelectOrderIds ? value => onSelect(Array.from(value?.rows ?? [])) : undefined
+            }
             loading={disabled}
             columnSelect="single"
             hasRowHover={hasRowHover}

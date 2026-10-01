@@ -9,8 +9,10 @@ export const orderListQuery = gql`
     $where: OrderWhereInput
     $search: String
     $sort: OrderSortingInput
+    $inTrash: Boolean = false
   ) {
     orders(
+      inTrash: $inTrash
       before: $before
       after: $after
       first: $first
@@ -45,6 +47,13 @@ export const orderListQuery = gql`
           }
           id
           number
+          privateMetadata {
+            key
+            value
+          }
+          fulfillments {
+            id
+          }
           paymentStatus
           status
           subtotal {

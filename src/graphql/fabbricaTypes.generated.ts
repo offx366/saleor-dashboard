@@ -13605,6 +13605,8 @@ export type Mutation = {
    * @deprecated Use `channelUpdate` mutation instead.
    */
   orderSettingsUpdate: Maybe<OrderSettingsUpdate>;
+  /** Reversibly hide canceled, never-shipped orders or restore them. Staff only. */
+  orderTrash: Maybe<OrderTrash>;
   /**
    * Updates an order.
    *
@@ -15746,6 +15748,14 @@ export type MutationOrderRefundArgs = {
 
 export type MutationOrderSettingsUpdateArgs = {
   input: OrderSettingsUpdateInput;
+};
+
+
+export type MutationOrderTrashArgs = {
+  confirmation: Scalars['String']['input'];
+  ids: Array<Scalars['ID']['input']>;
+  numbers: Array<Scalars['String']['input']>;
+  restore?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -19091,6 +19101,12 @@ export type OrderStatusFilter =
   | 'READY_TO_FULFILL'
   | 'UNCONFIRMED'
   | 'UNFULFILLED';
+
+export type OrderTrash = {
+  __typename: 'OrderTrash';
+  errors: Array<OrderError>;
+  orders: Maybe<Array<Order>>;
+};
 
 /**
  * Updates an order.
@@ -25920,6 +25936,7 @@ export type QueryOrdersArgs = {
   channel: InputMaybe<Scalars['String']['input']>;
   filter: InputMaybe<OrderFilterInput>;
   first: InputMaybe<Scalars['Int']['input']>;
+  inTrash?: InputMaybe<Scalars['Boolean']['input']>;
   last: InputMaybe<Scalars['Int']['input']>;
   search: InputMaybe<Scalars['String']['input']>;
   sortBy: InputMaybe<OrderSortingInput>;

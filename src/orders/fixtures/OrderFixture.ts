@@ -28,6 +28,7 @@ import { TransactionFixture } from "./TransactionFixture";
  */
 export class OrderFixture {
   private static baseOrder = {
+    privateMetadata: [],
     displayGrossPrices: true,
     __typename: "Order",
     number: "12345",

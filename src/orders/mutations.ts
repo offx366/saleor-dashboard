@@ -1,5 +1,30 @@
 import { gql } from "@apollo/client";
 
+export const orderTrashMutation = gql`
+  mutation OrderTrash(
+    $ids: [ID!]!
+    $numbers: [String!]!
+    $confirmation: String!
+    $restore: Boolean!
+  ) {
+    orderTrash(ids: $ids, numbers: $numbers, confirmation: $confirmation, restore: $restore) {
+      orders {
+        id
+        number
+        privateMetadata {
+          key
+          value
+        }
+      }
+      errors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
 export const orderCancelMutation = gql`
   mutation OrderCancel($id: ID!) {
     orderCancel(id: $id) {

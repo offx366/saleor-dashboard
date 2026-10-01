@@ -14,6 +14,8 @@ type Order = RelayToFlat<NonNullable<OrderListQuery["orders"]>>[number];
 
 const sampleOrder: Order = {
   __typename: "Order",
+  privateMetadata: [],
+  fulfillments: [],
   billingAddress: {
     __typename: "Address",
     city: "Minsk",

@@ -2332,6 +2332,10 @@ export const InvoiceFragmentDoc = gql`
     `;
 export const OrderDetailsFragmentDoc = gql`
     fragment OrderDetails on Order {
+  privateMetadata {
+    key
+    value
+  }
   id
   displayGrossPrices
   billingAddress {
@@ -12140,6 +12144,59 @@ export function useModelsOfTypeLazyQuery(baseOptions?: ApolloReactHooks.LazyQuer
 export type ModelsOfTypeQueryHookResult = ReturnType<typeof useModelsOfTypeQuery>;
 export type ModelsOfTypeLazyQueryHookResult = ReturnType<typeof useModelsOfTypeLazyQuery>;
 export type ModelsOfTypeQueryResult = Apollo.QueryResult<Types.ModelsOfTypeQuery, Types.ModelsOfTypeQueryVariables>;
+export const OrderTrashDocument = gql`
+    mutation OrderTrash($ids: [ID!]!, $numbers: [String!]!, $confirmation: String!, $restore: Boolean!) {
+  orderTrash(
+    ids: $ids
+    numbers: $numbers
+    confirmation: $confirmation
+    restore: $restore
+  ) {
+    orders {
+      id
+      number
+      privateMetadata {
+        key
+        value
+      }
+    }
+    errors {
+      field
+      message
+      code
+    }
+  }
+}
+    `;
+export type OrderTrashMutationFn = Apollo.MutationFunction<Types.OrderTrashMutation, Types.OrderTrashMutationVariables>;
+
+/**
+ * __useOrderTrashMutation__
+ *
+ * To run a mutation, you first call `useOrderTrashMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useOrderTrashMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [orderTrashMutation, { data, loading, error }] = useOrderTrashMutation({
+ *   variables: {
+ *      ids: // value for 'ids'
+ *      numbers: // value for 'numbers'
+ *      confirmation: // value for 'confirmation'
+ *      restore: // value for 'restore'
+ *   },
+ * });
+ */
+export function useOrderTrashMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<Types.OrderTrashMutation, Types.OrderTrashMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<Types.OrderTrashMutation, Types.OrderTrashMutationVariables>(OrderTrashDocument, options);
+      }
+export type OrderTrashMutationHookResult = ReturnType<typeof useOrderTrashMutation>;
+export type OrderTrashMutationResult = Apollo.MutationResult<Types.OrderTrashMutation>;
+export type OrderTrashMutationOptions = Apollo.BaseMutationOptions<Types.OrderTrashMutation, Types.OrderTrashMutationVariables>;
 export const OrderCancelDocument = gql`
     mutation OrderCancel($id: ID!) {
   orderCancel(id: $id) {
@@ -13833,8 +13890,9 @@ export type CreateManualTransactionRefundMutationHookResult = ReturnType<typeof 
 export type CreateManualTransactionRefundMutationResult = Apollo.MutationResult<Types.CreateManualTransactionRefundMutation>;
 export type CreateManualTransactionRefundMutationOptions = Apollo.BaseMutationOptions<Types.CreateManualTransactionRefundMutation, Types.CreateManualTransactionRefundMutationVariables>;
 export const OrderListDocument = gql`
-    query OrderList($first: Int, $after: String, $last: Int, $before: String, $where: OrderWhereInput, $search: String, $sort: OrderSortingInput) {
+    query OrderList($first: Int, $after: String, $last: Int, $before: String, $where: OrderWhereInput, $search: String, $sort: OrderSortingInput, $inTrash: Boolean = false) {
   orders(
+    inTrash: $inTrash
     before: $before
     after: $after
     first: $first
@@ -13869,6 +13927,13 @@ export const OrderListDocument = gql`
         }
         id
         number
+        privateMetadata {
+          key
+          value
+        }
+        fulfillments {
+          id
+        }
         paymentStatus
         status
         subtotal {
@@ -13920,6 +13985,7 @@ export const OrderListDocument = gql`
  *      where: // value for 'where'
  *      search: // value for 'search'
  *      sort: // value for 'sort'
+ *      inTrash: // value for 'inTrash'
  *   },
  * });
  */

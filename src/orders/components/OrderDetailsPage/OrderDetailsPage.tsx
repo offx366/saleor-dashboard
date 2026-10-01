@@ -51,6 +51,8 @@ import { useOrderLinePriceWaterfall } from "../OrderLinePriceBreakdown/hooks/use
 import { OrderSummary } from "../OrderSummary/OrderSummary";
 import { OrderTrackingTimeline } from "../OrderTrackingTimeline/OrderTrackingTimeline";
 import { OrderTransactionsSection } from "../OrderTransactionsSection/OrderTransactionsSection";
+import { OrderTrashControls } from "../OrderTrash/OrderTrashControls";
+import { canMoveOrderToTrash, isOrderInTrash } from "../OrderTrash/utils";
 import { messages } from "./messages";
 import Title from "./Title";
 import { createOrderMetadataIdSchema } from "./utils";
@@ -233,6 +235,15 @@ const OrderDetailsPage = (props: OrderDetailsPageProps) => {
         />
 
         <TopNav.Menu dataTestId="menu" items={menuItems} />
+        {order && (isOrderInTrash(order) || canMoveOrderToTrash(order)) && (
+          <OrderTrashControls
+            orders={[order]}
+            restore={isOrderInTrash(order)}
+            onCompleted={() =>
+              navigate(orderListUrl(isOrderInTrash(order) ? {} : { inTrash: "true" }))
+            }
+          />
+        )}
       </TopNav>
 
       <DetailPageLayout.Content data-test-id="order-fulfillment">

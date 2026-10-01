@@ -75,8 +75,9 @@ export enum OrderListUrlSortField {
   rank = "rank",
 }
 type OrderListUrlSort = Sort<OrderListUrlSortField>;
-export type OrderListUrlQueryParams = BulkAction &
-  Dialog<OrderListUrlDialog> &
+export type OrderListUrlQueryParams = BulkAction & {
+  inTrash?: string;
+} & Dialog<OrderListUrlDialog> &
   OrderListUrlFilters &
   OrderListUrlSort &
   Pagination &

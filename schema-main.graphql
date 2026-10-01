@@ -827,6 +827,9 @@ type Query {
     """Sort orders."""
     sortBy: OrderSortingInput
 
+    """Show only reversibly trashed orders. Default excludes Trash."""
+    inTrash: Boolean = false
+
     """Filtering options for orders."""
     filter: OrderFilterInput @deprecated(reason: "Use `where` filter instead.")
 
@@ -17636,7 +17639,14 @@ enum StaffMemberStatus @doc(category: "Users") {
   DEACTIVATED
 }
 
+type OrderTrash {
+  orders: [Order!]
+  errors: [OrderError!]!
+}
+
 type Mutation {
+  """Reversibly hide canceled, never-shipped orders or restore them. Staff only."""
+  orderTrash(ids: [ID!]!, numbers: [String!]!, confirmation: String!, restore: Boolean = false): OrderTrash
   """
   Creates a new webhook subscription. 
   

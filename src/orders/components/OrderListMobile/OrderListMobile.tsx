@@ -20,6 +20,7 @@ import { useLocation } from "react-router";
 import { Link } from "react-router-dom";
 
 import { getCountryFlagDataUri } from "../OrderListDatagrid/countryFlag";
+import { trashMessages } from "../OrderTrash/messages";
 import styles from "./OrderListMobile.module.css";
 
 type Order = RelayToFlat<NonNullable<OrderListQuery["orders"]>>[number];
@@ -30,6 +31,8 @@ interface OrderListMobileProps {
   onRowClick?: (id: string) => void;
   orders: Order[];
   rowAnchor?: (id: string) => string;
+  selectedOrderIds?: string[];
+  onToggleSelection?: (id: string, checked: boolean) => void;
 }
 
 const getCustomerLabel = (order: Order): string => {
@@ -46,6 +49,8 @@ export const OrderListMobile = ({
   onRowClick,
   orders,
   rowAnchor,
+  selectedOrderIds = [],
+  onToggleSelection,
 }: OrderListMobileProps): ReactElement => {
   const intl = useIntl();
   const { locale } = useLocale();
@@ -121,6 +126,15 @@ export const OrderListMobile = ({
 
         return (
           <li className={styles.item} key={order.id}>
+            {onToggleSelection && (
+              <input
+                className={styles.selection}
+                type="checkbox"
+                aria-label={intl.formatMessage(trashMessages.select, { number: order.number })}
+                checked={selectedOrderIds.includes(order.id)}
+                onChange={event => onToggleSelection(order.id, event.target.checked)}
+              />
+            )}
             <Link
               className={styles.link}
               onClick={handleFallbackClick}

@@ -40,6 +40,9 @@ import { FormattedMessage, useIntl } from "react-intl";
 
 import OrderLimitReached from "../OrderLimitReached";
 import { OrderListDatagrid } from "../OrderListDatagrid";
+import { trashMessages } from "../OrderTrash/messages";
+import trashStyles from "../OrderTrash/OrderTrash.module.css";
+import { OrderTrashControls } from "../OrderTrash/OrderTrashControls";
 
 interface OrderListPageProps
   extends PageListProps,
@@ -54,6 +57,12 @@ interface OrderListPageProps
   params: OrderListUrlQueryParams;
   onTabUpdate: (tabName: string) => void;
   onTabDelete: (tabIndex: number) => void;
+  selectedOrderIds: string[];
+  onSelectOrderIds: (indexes: number[], clearSelection: () => void) => void;
+  onSelectCanceled: () => void;
+  inTrash: boolean;
+  onTrashViewChange: () => void;
+  onTrashCompleted: () => void;
 }
 
 const OrderListPage = ({
@@ -70,6 +79,12 @@ const OrderListPage = ({
   onAll,
   currentTab,
   hasPresetsChanged,
+  selectedOrderIds,
+  onSelectOrderIds,
+  onSelectCanceled,
+  inTrash,
+  onTrashViewChange,
+  onTrashCompleted,
   ...listProps
 }: OrderListPageProps) => {
   const intl = useIntl();
@@ -107,7 +122,7 @@ const OrderListPage = ({
   return (
     <ListPageLayout>
       <TopNav
-        title={intl.formatMessage(sectionNames.orders)}
+        title={intl.formatMessage(inTrash ? trashMessages.trash : sectionNames.orders)}
         subtitle={subtitle}
         withoutBorder
         isAlignToRight={false}
@@ -130,6 +145,9 @@ const OrderListPage = ({
           </Box>
 
           <Box display="flex" alignItems="center" gap={2}>
+            <Button variant="secondary" onClick={onTrashViewChange} data-test-id="order-trash-view">
+              {intl.formatMessage(inTrash ? trashMessages.allOrders : trashMessages.trash)}
+            </Button>
             {!!onSettingsOpen && (
               <TopNav.Menu
                 items={[
@@ -215,6 +233,24 @@ const OrderListPage = ({
       {limitsReached && <OrderLimitReached />}
 
       <DashboardCard>
+        {inTrash && (
+          <p className={trashStyles.hint}>{intl.formatMessage(trashMessages.trashHint)}</p>
+        )}
+        <div className={trashStyles.toolbar}>
+          {!inTrash && (
+            <Button variant="secondary" onClick={onSelectCanceled} disabled={listProps.disabled}>
+              {intl.formatMessage(trashMessages.selectCanceled)}
+            </Button>
+          )}
+          <span>
+            {intl.formatMessage(trashMessages.selected, { count: selectedOrderIds.length })}
+          </span>
+          <OrderTrashControls
+            orders={(listProps.orders ?? []).filter(order => selectedOrderIds.includes(order.id))}
+            restore={inTrash}
+            onCompleted={onTrashCompleted}
+          />
+        </div>
         <ListFilters
           type="expression-filter"
           initialSearch={initialSearch}
@@ -225,7 +261,13 @@ const OrderListPage = ({
             defaultMessage: "Search Orders...",
           })}
         />
-        <OrderListDatagrid {...listProps} hasRowHover={!isFilterPresetOpen} rowAnchor={orderUrl} />
+        <OrderListDatagrid
+          {...listProps}
+          selectedOrderIds={selectedOrderIds}
+          onSelectOrderIds={onSelectOrderIds}
+          hasRowHover={!isFilterPresetOpen}
+          rowAnchor={orderUrl}
+        />
       </DashboardCard>
     </ListPageLayout>
   );

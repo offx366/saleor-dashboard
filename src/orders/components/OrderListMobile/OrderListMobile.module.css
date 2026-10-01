@@ -6,12 +6,16 @@
 }
 
 .item {
+  display: flex;
+  align-items: center;
   margin: 0;
   padding: 0;
   border-bottom: 1px solid var(--mu-colors-border-default1);
 }
 
 .link {
+  flex: 1;
+  min-width: 0;
   display: block;
   min-height: 7rem;
   padding: var(--mu-spacing-4);
@@ -19,6 +23,14 @@
   text-decoration: none;
   touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
+}
+
+.selection {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-left: 16px;
+  cursor: pointer;
 }
 
 .link:active {

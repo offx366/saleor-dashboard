@@ -399,6 +399,10 @@ export const orderDiscount = gql`
 
 export const fragmentOrderDetails = gql`
   fragment OrderDetails on Order {
+    privateMetadata {
+      key
+      value
+    }
     id
     displayGrossPrices
     billingAddress {

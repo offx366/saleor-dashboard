@@ -620,6 +620,7 @@ import type {
   OrderSettingsUpdateInput,
   OrderSortingInput,
   OrderStatusEnumFilterInput,
+  OrderTrash,
   OrderUpdate,
   OrderUpdateInput,
   OrderUpdateShipping,
@@ -16801,6 +16802,8 @@ export type OptionalMutation = {
  * Requires one of the following permissions: MANAGE_ORDERS.
  */
   orderSettingsUpdate?: Maybe<OptionalOrderSettingsUpdate> | undefined;
+  /** Reversibly hide canceled, never-shipped orders or restore them. Staff only. */
+  orderTrash?: Maybe<OptionalOrderTrash> | undefined;
   /**
  * Updates an order.
  *
@@ -20940,6 +20943,23 @@ export type OptionalOrderStatusEnumFilterInput = {
  */
 export const defineOrderStatusEnumFilterInputFactory: DefineTypeFactoryInterface<
   OptionalOrderStatusEnumFilterInput,
+  {}
+> = defineTypeFactory;
+
+export type OptionalOrderTrash = {
+  __typename?: 'OrderTrash';
+  errors?: OptionalOrderError[] | undefined;
+  orders?: Maybe<OptionalOrder[]> | undefined;
+};
+
+/**
+ * Define factory for {@link OrderTrash} model.
+ *
+ * @param options
+ * @returns factory {@link OrderTrashFactoryInterface}
+ */
+export const defineOrderTrashFactory: DefineTypeFactoryInterface<
+  OptionalOrderTrash,
   {}
 > = defineTypeFactory;
 
