@@ -1,5 +1,6 @@
 import { LOCAL_STORAGE_EXISTS } from "../constants";
 import { SALEOR_AUTH_PLUGIN_ID, SALEOR_REFRESH_TOKEN } from "./constants";
+import { advanceSession } from "./sessionRefresh";
 
 export let storage: {
   setAuthPluginId: (method: string | null) => void;
@@ -13,6 +14,8 @@ export let storage: {
 };
 
 export const createStorage = (autologinEnabled: boolean): void => {
+  advanceSession();
+
   let authPluginId: string | null = LOCAL_STORAGE_EXISTS
     ? localStorage.getItem(SALEOR_AUTH_PLUGIN_ID)
     : null;

@@ -1,9 +1,11 @@
 import jwtDecode from "jwt-decode";
 
 import { createApolloClient } from "../apollo";
+import { USER } from "../apollo/queries";
 import { DEVELOPMENT_MODE, WINDOW_EXISTS } from "../constants";
 import { isInternalToken } from "../helpers";
 import { auth } from "./auth";
+import { getSessionVersion } from "./sessionRefresh";
 import { getState, type State } from "./state";
 import { createStorage, storage } from "./storage";
 import { type JWTToken, type SaleorClient, type SaleorClientOpts } from "./types";
@@ -32,13 +34,35 @@ export const createSaleorClient = ({
   const refreshToken = storage.getRefreshToken();
 
   if (autologin && refreshToken) {
-    const owner = jwtDecode<JWTToken>(refreshToken).owner;
+    const version = getSessionVersion();
+    const restoreSession = async (): Promise<void> => {
+      try {
+        let owner: string;
 
-    if (isInternalToken(owner)) {
-      authSDK.refreshToken(true);
-    } else {
-      authSDK.refreshExternalToken(true);
-    }
+        try {
+          owner = jwtDecode<JWTToken>(refreshToken).owner;
+        } catch {
+          // A malformed stored JWT cannot be repaired by retrying the network.
+          await authSDK.logout();
+
+          return;
+        }
+
+        if (isInternalToken(owner)) {
+          await authSDK.refreshToken(true);
+        } else {
+          await authSDK.refreshExternalToken(true);
+        }
+      } catch {
+        // Keep a stored refresh token on network failure. A reload can retry recovery.
+      } finally {
+        if (version === getSessionVersion()) {
+          apolloClient.writeQuery({ query: USER, data: { authenticating: false } });
+        }
+      }
+    };
+
+    void restoreSession();
   }
 
   const client = {

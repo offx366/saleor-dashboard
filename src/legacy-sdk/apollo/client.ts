@@ -10,6 +10,11 @@ import jwtDecode from "jwt-decode";
 
 import { type JWTToken } from "../core";
 import { auth, type AuthSDK } from "../core/auth";
+import {
+  assertCurrentSession,
+  getSessionVersion,
+  RefreshUnavailableError,
+} from "../core/sessionRefresh";
 import { storage } from "../core/storage";
 import { isInternalToken } from "../helpers";
 import { type TypedTypePolicies } from "./apollo-helpers";
@@ -21,9 +26,47 @@ let refreshPromise:
   | ReturnType<AuthSDK["refreshToken"]>
   | ReturnType<AuthSDK["refreshExternalToken"]>
   | null = null;
+let refreshVersion = -1;
+const runTokenRefresh = (
+  owner: string,
+): ReturnType<AuthSDK["refreshToken"]> | ReturnType<AuthSDK["refreshExternalToken"]> => {
+  const version = getSessionVersion();
+
+  if (refreshPromise && refreshVersion === version) {
+    return refreshPromise;
+  }
+
+  const pending = isInternalToken(owner)
+    ? authClient.refreshToken()
+    : authClient.refreshExternalToken();
+
+  refreshPromise = pending;
+  refreshVersion = version;
+  void pending
+    .finally(() => {
+      if (refreshPromise === pending) {
+        refreshPromise = null;
+      }
+    })
+    .catch(() => undefined);
+
+  return pending;
+};
 const isTokenRefreshExternal = (
   result: RefreshTokenMutation | ExternalRefreshMutation,
 ): result is ExternalRefreshMutation => "externalRefresh" in result;
+
+const hasRefreshedToken = (
+  data?: RefreshTokenMutation | ExternalRefreshMutation | null,
+): boolean => {
+  if (!data) {
+    return false;
+  }
+
+  return Boolean(
+    isTokenRefreshExternal(data) ? data.externalRefresh?.token : data.tokenRefresh?.token,
+  );
+};
 
 export type FetchConfig = Partial<{
   /**
@@ -59,7 +102,17 @@ export const createFetch =
 
     try {
       if (
-        ["refreshToken", "externalRefresh"].includes(
+        [
+          "refreshToken",
+          "refreshTokenWithUser",
+          "externalRefresh",
+          "externalRefreshWithUser",
+          "login",
+          "loginWithoutDetails",
+          "externalObtainAccessTokens",
+          "setPassword",
+          "externalLogout",
+        ].includes(
           // INFO: Non-null assertion is enabled because the block is wrapped inside try/catch
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           JSON.parse(init.body!.toString()).operationName,
@@ -71,28 +124,21 @@ export const createFetch =
       // ignore
     }
 
+    const version = getSessionVersion();
+
     if (autoTokenRefresh && token) {
       // auto refresh token before provided time skew (in seconds) until it expires
       const decodedToken = jwtDecode<JWTToken>(token);
       const expirationTime = (decodedToken.exp - tokenRefreshTimeSkew) * 1000;
       const owner = decodedToken.owner;
 
-      try {
-        if (refreshPromise) {
-          await refreshPromise;
-        } else if (Date.now() >= expirationTime) {
-          if (isInternalToken(owner)) {
-            await authClient.refreshToken();
-          } else {
-            await authClient.refreshExternalToken();
-          }
-        }
-      } catch {
-        // ignore
-      } finally {
-        refreshPromise = null;
+      if (refreshPromise && refreshVersion === version) {
+        await refreshPromise;
+      } else if (Date.now() >= expirationTime) {
+        await runTokenRefresh(owner);
       }
 
+      assertCurrentSession(version);
       token = storage.getAccessToken();
     }
 
@@ -105,7 +151,13 @@ export const createFetch =
 
     if (refreshOnUnauthorized && token) {
       const response = await fetch(input, init);
+
+      assertCurrentSession(version);
+
       const data: FetchResult = await response.clone().json();
+
+      assertCurrentSession(version);
+
       const isUnauthenticated = data?.errors?.some(
         error =>
           (error.extensions?.exception as Record<string, unknown>)?.code ===
@@ -119,42 +171,29 @@ export const createFetch =
       const owner = jwtDecode<JWTToken>(token).owner;
 
       if (isUnauthenticated) {
-        try {
-          if (refreshPromise) {
-            refreshTokenResponse = await refreshPromise;
-          } else {
-            refreshPromise = isInternalToken(owner)
-              ? authClient.refreshToken()
-              : authClient.refreshExternalToken();
-            refreshTokenResponse = await refreshPromise;
-          }
+        refreshTokenResponse = await runTokenRefresh(owner);
+        assertCurrentSession(version);
 
-          if (
-            refreshTokenResponse.data && isTokenRefreshExternal(refreshTokenResponse.data)
-              ? refreshTokenResponse.data.externalRefresh?.token
-              : (refreshTokenResponse.data as RefreshTokenMutation | undefined)?.tokenRefresh?.token
-          ) {
-            // check if mutation returns a valid token after refresh and retry the request
-            return createFetch({
-              autoTokenRefresh: false,
-              refreshOnUnauthorized: false,
-            })(input, init);
-          } else {
-            // after Saleor returns ExpiredSignatureError status and token refresh fails
-            // we log out the user and return the failed response
-            authClient.logout();
-          }
-        } catch {
-          // ignore
-        } finally {
-          refreshPromise = null;
+        if (hasRefreshedToken(refreshTokenResponse.data)) {
+          // check if mutation returns a valid token after refresh and retry the request
+          return createFetch({
+            autoTokenRefresh: false,
+            refreshOnUnauthorized: false,
+          })(input, init);
+        } else {
+          // A missing response is not proof that the refresh token was rejected.
+          throw new RefreshUnavailableError();
         }
       }
 
       return response;
     }
 
-    return fetch(input, init);
+    const response = await fetch(input, init);
+
+    assertCurrentSession(version);
+
+    return response;
   };
 
 const getTypePolicies = (autologin: boolean): TypedTypePolicies => ({

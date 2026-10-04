@@ -41,6 +41,13 @@ import {
   type VerifyTokenMutationVariables,
 } from "../apollo/types";
 import { hasNonEmptyPermissions } from "./helpers";
+import {
+  advanceSession,
+  getSessionVersion,
+  isRefreshTokenRejected,
+  RefreshUnavailableError,
+  retryRefresh,
+} from "./sessionRefresh";
 import { storage } from "./storage";
 import {
   type ChangePasswordOpts,
@@ -144,6 +151,8 @@ export interface AuthSDK {
 
 export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK => {
   const login: AuthSDK["login"] = ({ includeDetails = true, ...opts }) => {
+    advanceSession();
+
     const query = includeDetails ? USER : USER_WITHOUT_DETAILS;
     const loginMutation = includeDetails ? LOGIN : LOGIN_WITHOUT_DETAILS;
 
@@ -178,6 +187,8 @@ export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK =
   };
 
   const logout: AuthSDK["logout"] = async opts => {
+    advanceSession();
+
     const authPluginId = storage.getAuthPluginId();
 
     storage.clear();
@@ -206,7 +217,22 @@ export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK =
     return null;
   };
 
+  const checkRefreshResult = <T>(
+    result: T,
+    payload?: {
+      token: string | null;
+      errors: ReadonlyArray<{ code?: string; field?: string | null }>;
+    } | null,
+  ): T => {
+    if (!payload?.token && !isRefreshTokenRejected(payload?.errors ?? [])) {
+      throw new RefreshUnavailableError();
+    }
+
+    return result;
+  };
+
   const refreshToken: AuthSDK["refreshToken"] = (includeUser = false) => {
+    const version = getSessionVersion();
     const refreshToken = storage.getRefreshToken();
 
     if (!refreshToken) {
@@ -214,33 +240,59 @@ export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK =
     }
 
     if (includeUser) {
-      return client.mutate<RefreshTokenWithUserMutation, RefreshTokenWithUserMutationVariables>({
-        mutation: REFRESH_TOKEN_WITH_USER,
-        variables: {
-          refreshToken,
-        },
-        update: (_, { data }) => {
-          if (data?.tokenRefresh?.token) {
-            storage.setAccessToken(data.tokenRefresh.token);
-          } else {
-            logout();
-          }
-        },
+      return retryRefresh({
+        version,
+        run: () =>
+          client
+            .mutate<RefreshTokenWithUserMutation, RefreshTokenWithUserMutationVariables>({
+              fetchPolicy: "no-cache",
+              mutation: REFRESH_TOKEN_WITH_USER,
+              variables: {
+                refreshToken,
+              },
+              update: (_, { data }) => {
+                if (version !== getSessionVersion()) {
+                  return;
+                }
+
+                if (data?.tokenRefresh?.token) {
+                  storage.setAccessToken(data.tokenRefresh.token);
+                  client.writeQuery({
+                    query: USER,
+                    data: { user: data.tokenRefresh.user, authenticating: false },
+                  });
+                } else if (isRefreshTokenRejected(data?.tokenRefresh?.errors ?? [])) {
+                  logout();
+                }
+              },
+            })
+            .then(result => checkRefreshResult(result, result.data?.tokenRefresh)),
       });
     }
 
-    return client.mutate<RefreshTokenMutation, RefreshTokenMutationVariables>({
-      mutation: REFRESH_TOKEN,
-      variables: {
-        refreshToken,
-      },
-      update: (_, { data }) => {
-        if (data?.tokenRefresh?.token) {
-          storage.setAccessToken(data.tokenRefresh.token);
-        } else {
-          logout();
-        }
-      },
+    return retryRefresh({
+      version,
+      run: () =>
+        client
+          .mutate<RefreshTokenMutation, RefreshTokenMutationVariables>({
+            fetchPolicy: "no-cache",
+            mutation: REFRESH_TOKEN,
+            variables: {
+              refreshToken,
+            },
+            update: (_, { data }) => {
+              if (version !== getSessionVersion()) {
+                return;
+              }
+
+              if (data?.tokenRefresh?.token) {
+                storage.setAccessToken(data.tokenRefresh.token);
+              } else if (isRefreshTokenRejected(data?.tokenRefresh?.errors ?? [])) {
+                logout();
+              }
+            },
+          })
+          .then(result => checkRefreshResult(result, result.data?.tokenRefresh)),
     });
   };
 
@@ -273,6 +325,8 @@ export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK =
   };
 
   const setPassword: AuthSDK["setPassword"] = opts => {
+    advanceSession();
+
     return client.mutate<SetPasswordMutation, SetPasswordMutationVariables>({
       mutation: SET_PASSWORD,
       variables: { ...opts },
@@ -300,6 +354,7 @@ export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK =
   };
 
   const getExternalAccessToken: AuthSDK["getExternalAccessToken"] = opts => {
+    advanceSession();
     client.writeQuery({
       query: USER,
       data: {
@@ -339,6 +394,7 @@ export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK =
   };
 
   const refreshExternalToken: AuthSDK["refreshExternalToken"] = (includeUser = false) => {
+    const version = getSessionVersion();
     const refreshToken = storage.getRefreshToken();
     const authPluginId = storage.getAuthPluginId();
 
@@ -347,48 +403,71 @@ export const auth = ({ apolloClient: client }: SaleorClientInternals): AuthSDK =
     }
 
     if (includeUser) {
-      return client.mutate<
-        ExternalRefreshWithUserMutation,
-        ExternalRefreshWithUserMutationVariables
-      >({
-        mutation: EXTERNAL_REFRESH_WITH_USER,
-        variables: {
-          pluginId: authPluginId,
-          input: JSON.stringify({
-            refreshToken,
-          }),
-        },
-        update: (_, { data }) => {
-          if (data?.externalRefresh?.token) {
-            storage.setTokens({
-              accessToken: data.externalRefresh.token,
-              refreshToken: data.externalRefresh.refreshToken,
-            });
-          } else {
-            logout();
-          }
-        },
+      return retryRefresh({
+        version,
+        run: () =>
+          client
+            .mutate<ExternalRefreshWithUserMutation, ExternalRefreshWithUserMutationVariables>({
+              fetchPolicy: "no-cache",
+              mutation: EXTERNAL_REFRESH_WITH_USER,
+              variables: {
+                pluginId: authPluginId,
+                input: JSON.stringify({
+                  refreshToken,
+                }),
+              },
+              update: (_, { data }) => {
+                if (version !== getSessionVersion()) {
+                  return;
+                }
+
+                if (data?.externalRefresh?.token) {
+                  storage.setTokens({
+                    accessToken: data.externalRefresh.token,
+                    refreshToken: data.externalRefresh.refreshToken,
+                  });
+                  client.writeQuery({
+                    query: USER,
+                    data: { user: data.externalRefresh.user, authenticating: false },
+                  });
+                } else if (isRefreshTokenRejected(data?.externalRefresh?.errors ?? [])) {
+                  logout();
+                }
+              },
+            })
+            .then(result => checkRefreshResult(result, result.data?.externalRefresh)),
       });
     }
 
-    return client.mutate<ExternalRefreshMutation, ExternalRefreshMutationVariables>({
-      mutation: EXTERNAL_REFRESH,
-      variables: {
-        pluginId: authPluginId,
-        input: JSON.stringify({
-          refreshToken,
-        }),
-      },
-      update: (_, { data }) => {
-        if (data?.externalRefresh?.token) {
-          storage.setTokens({
-            accessToken: data.externalRefresh.token,
-            refreshToken: data.externalRefresh.refreshToken,
-          });
-        } else {
-          logout();
-        }
-      },
+    return retryRefresh({
+      version,
+      run: () =>
+        client
+          .mutate<ExternalRefreshMutation, ExternalRefreshMutationVariables>({
+            fetchPolicy: "no-cache",
+            mutation: EXTERNAL_REFRESH,
+            variables: {
+              pluginId: authPluginId,
+              input: JSON.stringify({
+                refreshToken,
+              }),
+            },
+            update: (_, { data }) => {
+              if (version !== getSessionVersion()) {
+                return;
+              }
+
+              if (data?.externalRefresh?.token) {
+                storage.setTokens({
+                  accessToken: data.externalRefresh.token,
+                  refreshToken: data.externalRefresh.refreshToken,
+                });
+              } else if (isRefreshTokenRejected(data?.externalRefresh?.errors ?? [])) {
+                logout();
+              }
+            },
+          })
+          .then(result => checkRefreshResult(result, result.data?.externalRefresh)),
     });
   };
 
